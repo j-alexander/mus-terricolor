@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Terricolor", "Terricolor\Terricolor.fsproj", "{104954F7-2993-4842-9EFF-E8D84C4F28E4}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Test", "Test\Test.fsproj", "{F441124C-A382-4724-B82B-953F2DB196EC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{104954F7-2993-4842-9EFF-E8D84C4F28E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{104954F7-2993-4842-9EFF-E8D84C4F28E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{104954F7-2993-4842-9EFF-E8D84C4F28E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{104954F7-2993-4842-9EFF-E8D84C4F28E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F441124C-A382-4724-B82B-953F2DB196EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F441124C-A382-4724-B82B-953F2DB196EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F441124C-A382-4724-B82B-953F2DB196EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F441124C-A382-4724-B82B-953F2DB196EC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

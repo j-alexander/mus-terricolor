@@ -2,15 +2,15 @@
 
 module PropagationTest =
 
-    open Microsoft.VisualStudio.TestTools.UnitTesting
+    open NUnit.Framework
     open Terricolor
     open Terricolor.Primitives
     open Terricolor.Propagation
 
-    [<TestClass>]
+    [<TestFixture>]
     type PropagationTest() =
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestEmpty() =
 
             let numberOfVariables = 3
@@ -32,7 +32,7 @@ module PropagationTest =
             Assert.AreEqual(WatchList List.empty, assignment.[3])
             ()
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestPositiveInitialUnitClause() =
             let assignment = makeEmptyAssignment 2
                              |> addClause [1]
@@ -58,7 +58,7 @@ module PropagationTest =
                 Assert.AreEqual(1, reason.Value.Count)
             ()
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestNegativeInitialUnitClause() =
             let assignment = makeEmptyAssignment 2
                              |> addClause [-1]
@@ -84,7 +84,7 @@ module PropagationTest =
                 Assert.AreEqual(1, reason.Value.Count)
             ()
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestChoiceAndPropagation1() =
             let assignment = makeEmptyAssignment 4
                              |> addClause [-2; 3]
@@ -124,7 +124,7 @@ module PropagationTest =
                 Assert.IsTrue(reason.IsNone)
             ()
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestChoiceAndPropagation2() =
             let assignment = makeEmptyAssignment 4
                              |> addClause [-2; 3]
@@ -164,7 +164,7 @@ module PropagationTest =
                 Assert.IsTrue(reason.Value.Contains(3))
             ()
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestConflictAtConstruction() =
             let assignment = makeEmptyAssignment 2
                              |> addClause [1; 2]
@@ -184,7 +184,7 @@ module PropagationTest =
                 Assert.IsTrue(reason.Value.Contains(-1) || reason.Value.Contains(1))
             ()
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestConflictAtChoice() =
             let assignment = makeEmptyAssignment 3
                              |> addClause [1; 2]
@@ -206,7 +206,7 @@ module PropagationTest =
                 Assert.IsTrue(reason.Value.Contains(-1) || reason.Value.Contains(1))
             ()
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestMultilevelConflict() =
             // Ex 4.2.4 - Handbook of Satisfiability (2009)
             // A Biere, M Heule, H van Maaren, T Walsh, Editors

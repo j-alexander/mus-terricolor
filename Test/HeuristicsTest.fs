@@ -2,12 +2,12 @@
 
 module HeuristicsTest =
 
-    open Microsoft.VisualStudio.TestTools.UnitTesting
+    open NUnit.Framework
     open Terricolor
     open Terricolor.Primitives
     open Terricolor.Heuristics
 
-    [<TestClass>]
+    [<TestFixture>]
     type HeuristicsTest() =
 
         let conflictClauses =
@@ -24,7 +24,7 @@ module HeuristicsTest =
             |> Map.add 11 1
             |> Map.add 21 1
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestHeuristicBumpOnce() =
             let result = 
                 { Steps = 0; Occurrences = Map.empty }
@@ -34,7 +34,7 @@ module HeuristicsTest =
             Assert.AreEqual(occurrences, result.Occurrences)
             ()
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestHeuristicBumpTwice() =
             let result =
                 { Steps = 0; Occurrences = Map.empty }
@@ -47,7 +47,7 @@ module HeuristicsTest =
             Assert.AreEqual(2, result.Steps)
             Assert.AreEqual(doubleOccurrences, result.Occurrences)
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestReduction() =
             let occurrences =
                 Map.empty

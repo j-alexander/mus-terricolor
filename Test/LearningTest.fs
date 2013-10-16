@@ -2,16 +2,16 @@
 
 module LearningTest =
 
-    open Microsoft.VisualStudio.TestTools.UnitTesting
+    open NUnit.Framework
     open Terricolor
     open Terricolor.Primitives
     open Terricolor.Propagation
     open Terricolor.Learning
 
-    [<TestClass>]
+    [<TestFixture>]
     type LearningTest() =
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestConflictLearning1() =
             // Ex 4.2.4 - Handbook of Satisfiability (2009)
             // A Biere, M Heule, H van Maaren, T Walsh, Editors
@@ -36,7 +36,7 @@ module LearningTest =
                 Assert.IsTrue(learnedClause.Contains 21)
             ()
 
-        [<TestMethod>]
+        [<Test>]
         member public x.TestUnsatisfiableProblem() =
             let assignment = makeEmptyAssignment 3
                              |> addClause [1; 2; 3]

@@ -3,6 +3,7 @@
 module Program = 
 
     open System
+    open System.ComponentModel
     open System.Diagnostics
     open System.Linq
     open System.IO
@@ -55,7 +56,10 @@ module Program =
 
             try
                 // increase the priority in the system scheduler
-                Process.GetCurrentProcess().PriorityClass <- ProcessPriorityClass.High;
+                try
+                    Process.GetCurrentProcess().PriorityClass <- ProcessPriorityClass.High;
+                with
+                | :? Win32Exception -> printfn "c Unable to boost PriorityClass"
                 
                 // use the appropriate number of concurrent workers
                 let concurrency =

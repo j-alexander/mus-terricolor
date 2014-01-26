@@ -38,16 +38,18 @@ module Reader =
 
         let readContents (contents : string) =
             let clauseMatches = clauseEx.Matches(contents).AsParallel().Cast<Match>();
-            let readLiteral (literalMatch : Match) =
-                let valueMatch = valueEx.Match(literalMatch.Value)
-                let value : Literal = Int32.Parse(valueMatch.Value)
-                value
-            let readClause (clauseMatch : Match) = 
-                let literalMatches = Seq.cast<Match>(literalEx.Matches(clauseMatch.Value))
-                let literals = Seq.map readLiteral literalMatches
-                literals
-            let clauses = clauseMatches.Select(readClause)
-            clauses
+            let readLiteral (literalMatch : Match) : Literal =
+                literalMatch.Value
+                |> valueEx.Match
+                |> (fun x -> x.Value)
+                |> Int32.Parse
+            let readClause (clauseMatch : Match) : Clause = 
+                clauseMatch.Value
+                |> literalEx.Matches
+                |> Seq.cast<Match>
+                |> Seq.map readLiteral
+                |> Seq.toArray
+            clauseMatches.Select(readClause)
             
         let stopwatch = Stopwatch.StartNew()
 

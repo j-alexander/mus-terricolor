@@ -2,6 +2,7 @@
 
 module Search = 
 
+
     open System
     open System.Linq
     open System.Diagnostics
@@ -36,16 +37,17 @@ module Search =
                         | WatchList(_) -> true
                     // determine the continuing tree configuration
                     let decisionLevels = 
-                        match Map.tryFindKey isUndecided current.Assignment with
+                        let assignment, implications = current.Propagation
+                        match assignment.TryFindUnassigned() with
                         | None ->
                             // all variables have been assigned
-                            raise (Satisfiable(current.Assignment))
+                            raise (Satisfiable(assignment))
                         | Some(literal) ->
                             let current, choice = select current literal
                             try
                                 // attempt this literal assignment
                                 let current = {
-                                    current with Assignment = choose choice current.Assignment }
+                                    current with Propagation = Propagation.choose choice current.Propagation }
 
                                 let restartInsteadOfBacktrack = true
                                 if restartInsteadOfBacktrack then
@@ -55,14 +57,17 @@ module Search =
                                     // keep the existing list of decision levels and continue intermediate search
                                     (current :: decisionLevels)
                             with
-                            | Conflict(trail, reason, assignment) ->
+                            | Conflict(reason, trail) ->
                                 // analyze conflict
-                                let learnedClause, conflictClauses = learnFromConflict(trail, reason, assignment)
+                                let learnedClause, conflictClauses = learnFromConflict(trail, reason)
                                 // define backtracking with assertion and integration
                                 let integrate (state : State) = 
                                     try
                                         Some {
-                                            Assignment = addClause learnedClause state.Assignment; 
+                                            Propagation =
+                                                state.Propagation
+                                                |> Propagation.insert <| learnedClause
+                                                |> Propagation.propagate
                                             Active = Set.union (Set.ofList conflictClauses) state.Active
                                             Learned = learnedClause :: state.Learned;
                                             Heuristic = bump conflictClauses state.Heuristic }

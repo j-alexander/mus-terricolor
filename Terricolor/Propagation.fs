@@ -1,94 +1,46 @@
 ﻿namespace Terricolor
 
+open FSharpx.Collections
+
+type Action = Insert | Update
+type Propagation = Assignment * Queue<Implication>
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Propagation =
 
-    open Benchmarking
-    open Primitives
-        
-    let rec watchAll (assignment : Assignment) (propagations : List<Propagation>) =
-        match propagations with
-        | [] -> assignment
-        | propagation :: propagations ->
-            let trail = propagation.Trail
-            let residual = propagation.Residual
-            let assignment, propagations =
-                match residual.Remainder with
-                | [] ->
-                    // the boolean constraint is unsatisfiable under the current assignment
-                    raise (Conflict (trail, Some residual.Clause, assignment))
-                | next :: tail ->
-                    // consume the next literal of the residual
-                    let variable = (Map.find next assignment)
-                    match variable with
-                    | Value(value) ->
-                        if value.IsTrue then
-                            // satisfied by the current assignment: drop this clause and continue
-                            assignment, propagations
-                        else
-                            // reduce one more step, since it's unsatisfied here
-                            assignment, {propagation with Residual = {residual with Remainder = tail}} :: propagations
-                    | WatchList(list) ->
-                        // a unit collision occurs if both residuals intersect
-                        let collision {Clause = clause} =
-                            residual.Clause = clause
-                        // check whether such a unit collision exists
-                        if List.exists collision list then
-                            // a unit collision has occurred
-                            let reason = Some residual.Clause
-                            let variable = Value {IsTrue = true; Reason = reason}
-                            let trail = next :: trail
-                            // update the assignment and eliminate the unit's mirror literal
-                            eliminate (mirror next, reason, trail) (Map.add next variable assignment) propagations
-                        else
-                            // otherwise the new residual is added to the watch list
-                            let variable =  WatchList(residual :: list)
-                            // update the assignment
-                            let assignment = Map.add next variable assignment
-                            assignment, propagations
-            // recurse next unit
-            watchAll assignment propagations
+    let watch (action : Action) ((assignment, implications) : Propagation) (clause : Clause) : Propagation =
+        if Seq.exists assignment.IsTrue clause then (assignment, implications)  // drop satisfied clauses
+        else
+            let unit = Seq.tryFind assignment.IsUnassigned clause
+            match unit with
+            | None -> raise (Conflict(Some clause, assignment.Trail))           // 0 watchable literals -> raise a conflict
+            | Some(unit) ->
+                let assignment =                                                // watch the first literal (on insert)
+                    match action with
+                    | Insert -> assignment.Watch unit clause
+                    | Update -> assignment
+                let second =                                                    // check for a second literal
+                    clause
+                    |> Seq.filter (fun x -> x <> unit)
+                    |> Seq.tryFind assignment.IsUnassigned
+                match second with
+                | None -> assignment, Queue.conj (unit, clause) implications    // == 1 watch literal -> imply the remaining literal
+                | Some(second) -> assignment.Watch second clause, implications  // >= 2 watch literals -> watch the second literal
 
-    and eliminate (eliminated : Literal, reason : Reason, trail : Trail) (assignment : Assignment) (propagations : List<Propagation>) =
-        let variable = Map.find eliminated assignment
-        match variable with
-        | Value(value) -> 
-            // raise a conflict if this literal is true, otherwise we're already done
-            if value.IsTrue then
-                raise (Conflict ([], reason, assignment))
-            else
-                assignment, propagations
-        | WatchList(list) ->
-            // eliminate this variable
-            let variable = Value {IsTrue = false; Reason = reason}
-            let assignment = Map.add eliminated variable assignment
-            // dispatching all watched residuals
-            let prepend propagations (residual : Residual) =
-                { Trail = trail; Residual = {residual with Remainder = residual.Remainder.Tail}} :: propagations
-            assignment, List.fold prepend propagations list
+    let insert : Propagation -> Clause -> Propagation = watch Insert
+    let update : Propagation -> Clause -> Propagation = watch Update
 
-    and watch (residual : Residual) (assignment : Assignment) =
-        watchAll assignment ({Trail = []; Residual = residual} :: [])
+    let rec propagate ((assignment, implications) : Propagation) : Propagation =
+        match Queue.tryHead implications with
+        | None -> (assignment, implications)
+        | Some(literal, clause) ->
+            let implications = Queue.tail implications
+            let assignment, watchedClauses = assignment.Assign literal (Some clause)
+            List.fold update (assignment, implications) watchedClauses
+            |> propagate
 
-    and choose (choice : Literal) (assignment : Assignment) =
-        // satisfy the choice literal in this assignment
-        let variable = Value {IsTrue = true; Reason = None}
-        let assignment = Map.add choice variable assignment
-        let trail = choice :: []
-        // eliminate its mirror
-        let assignment, propagations = (eliminate (mirror choice, None, trail) assignment [])
-        watchAll assignment propagations
-    
-    and addClause (clause : seq<int>) (assignment : Assignment) =
-        // build the boolean constraint and both remainder lists
-        let booleanConstraint = Set.ofSeq clause
-        let forward = Set.toList booleanConstraint
-        let reverse = List.rev forward
-        let forwardResidual = {Clause = booleanConstraint; Remainder = forward}
-        let reverseResidual = {forwardResidual with Remainder = reverse}
-        // include the residuals in the assignment
-        assignment |> watch forwardResidual
-                   |> watch reverseResidual
-
-    and foldClause (assignment : Assignment) (clause : seq<int>) =
-        addClause clause assignment
-
+    let choose (literal : Literal) ((assignment, implications) : Propagation) : Propagation =
+        let implications = Queue.empty
+        let assignment, watchedClauses = assignment.Assign literal None
+        List.fold update (assignment, implications) watchedClauses
+        |> propagate

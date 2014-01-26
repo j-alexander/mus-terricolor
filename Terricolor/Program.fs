@@ -13,10 +13,10 @@ module Program =
     open Terricolor.Concurrency
     open Terricolor.Primitives
     open Terricolor.Propagation
-    open Terricolor.Learning
-    open Terricolor.Heuristics
     open Terricolor.Search
+    open Terricolor.Heuristics
     open Terricolor.Reader
+    open FSharpx.Collections
 
     [<EntryPoint>]
     let main args = 
@@ -46,15 +46,17 @@ module Program =
             let contents = File.ReadAllText(filename)
             let variableCount, clauseCount, clauses, time = Reader.read(contents)
             printfn "c            [%d variables, %d clauses (%d ms)]" variableCount clauseCount time
-            let clauses = Set.ofSeq (Seq.map Set.ofSeq clauses)
-            printfn "c            [%d duplicates]" (clauseCount - clauses.Count)
-            
-            // construct the initial logic program
             let watch = Stopwatch.StartNew()
-            let program = Seq.fold foldClause (makeEmptyAssignment variableCount) clauses
-            printfn "c Searching"
 
             try
+                // construct the initial logic program
+                printfn "c Loading program..."
+                let program =
+                    clauses
+                    |> Seq.fold Propagation.insert (new Assignment(variableCount), Queue.empty)
+                    |> Propagation.propagate
+                printfn "c Searching"
+
                 // increase the priority in the system scheduler
                 try
                     Process.GetCurrentProcess().PriorityClass <- ProcessPriorityClass.High;
@@ -78,18 +80,18 @@ module Program =
                     Task.Run (fun () -> startSearch state timeout)
                 // define how to restart a state
                 let restart state =
-                    let isActive clause = Set.contains clause state.Active
-                    let learned = List.filter isActive state.Learned
-                    let assignment = List.fold foldClause program learned
-                    incrementLearned learned.Length
-                    let state = { state with Assignment = assignment;
+                    // for now, simply retain the active set
+                    let retained = Set.toList state.Active
+                    let propagation = List.fold Propagation.insert program retained |> Propagation.propagate
+                    incrementLearned retained.Length
+                    let state = { state with Propagation = propagation;
                                              Active = Set.empty;
-                                             Learned = learned }
+                                             Learned = retained }
                     start state
                 // define how to initialize with a timeout
                 let initialize i =
                     let state =
-                        { Assignment = program;
+                        { Propagation = program;
                           Active = Set.empty;
                           Learned = [];
                           Heuristic = makeHeuristic variableCount; }
@@ -114,21 +116,20 @@ module Program =
             with
             // a solution has been found, and should be printed
             | Satisfiable(solution) ->
-                printfn "p cnf %d %d" variableCount (clauses.Count + solution.Count)
+                let decisions =
+                    let filter = function (literal, None) -> Some(literal) | _ -> None
+                    solution.Trail |> List.choose filter
+
+                printfn "p cnf %d %d" variableCount (clauses.Count() + decisions.Length)
                 for clause in clauses do
                     for literal in clause do
                         printf "%d " literal
                     printfn "0"
-                for pair in solution do
-                    let literal, variable = pair.Key, pair.Value
-                    match variable with
-                    | Value(value) ->
-                        if value.IsTrue then
-                            printfn "%d 0" literal
-                    | WatchList(_) -> failwith "An assignment should be complete."
+                for decision in decisions do
+                    printfn "%d 0" decision
 
             // a trivial conflict was encountered in the initial problem (i.e. {{1} {-1}})
-            | Conflict (trail, reason, assignment) ->
+            | Conflict (reason, trail) ->
                 printfn "Unsatisfiable (Trivial Case)"
 
             // the problem has no solution

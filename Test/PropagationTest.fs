@@ -6,204 +6,198 @@ module PropagationTest =
     open Terricolor
     open Terricolor.Primitives
     open Terricolor.Propagation
+    open FSharpx.Collections
 
     [<TestFixture>]
     type PropagationTest() =
+
+        let assertUnassigned (assignment : Assignment) (literal : Literal) =
+            Assert.IsTrue(assignment.IsUnassigned literal)
+            Assert.IsFalse(assignment.IsAssigned literal)
+            Assert.IsFalse(assignment.IsTrue literal)
+            Assert.IsFalse(assignment.IsFalse literal)
+
+        let assertTrue (assignment : Assignment) (literal : Literal) =
+            Assert.IsTrue(assignment.IsTrue literal)
+            Assert.IsFalse(assignment.IsFalse literal)
+            Assert.IsFalse(assignment.IsUnassigned literal)
+            Assert.IsTrue(assignment.IsAssigned literal)
+            
+        let assertFalse (assignment : Assignment) (literal : Literal) =
+            Assert.IsFalse(assignment.IsTrue literal)
+            Assert.IsTrue(assignment.IsFalse literal)
+            Assert.IsFalse(assignment.IsUnassigned literal)
+            Assert.IsTrue(assignment.IsAssigned literal)
 
         [<Test>]
         member public x.TestEmpty() =
 
             let numberOfVariables = 3
-            let assignment = makeEmptyAssignment numberOfVariables
+            let assignment = new Assignment(numberOfVariables)
 
-            Assert.AreEqual(6, assignment.Count)
-            Assert.IsTrue(Map.containsKey -3 assignment)
-            Assert.IsTrue(Map.containsKey -2 assignment)
-            Assert.IsTrue(Map.containsKey -1 assignment)
-            Assert.IsTrue(Map.containsKey 1 assignment)
-            Assert.IsTrue(Map.containsKey 2 assignment)
-            Assert.IsTrue(Map.containsKey 3 assignment)
- 
-            Assert.AreEqual(WatchList List.empty, assignment.[-3])
-            Assert.AreEqual(WatchList List.empty, assignment.[-2])
-            Assert.AreEqual(WatchList List.empty, assignment.[-1])
-            Assert.AreEqual(WatchList List.empty, assignment.[1])
-            Assert.AreEqual(WatchList List.empty, assignment.[2])
-            Assert.AreEqual(WatchList List.empty, assignment.[3])
+            Assert.AreEqual(3, assignment.Variables)
+            let literals = [ -3; -2; -1; 1; 2; 3 ]
+
+            List.iter (assertUnassigned assignment) literals
             ()
 
         [<Test>]
         member public x.TestPositiveInitialUnitClause() =
-            let assignment = makeEmptyAssignment 2
-                             |> addClause [1]
-            
-            Assert.AreEqual(4, assignment.Count)
-            Assert.AreEqual(WatchList List.empty, assignment.[-2])
-            Assert.AreEqual(WatchList List.empty, assignment.[2])
+            let clause = [| 1 |]
+            let (assignment, implications) =
+                (new Assignment(2), Queue.empty) |> Propagation.insert <| clause
+                |> Propagation.propagate
 
-            match assignment.[-1] with
-            | WatchList(list) -> Assert.Fail("Should have been unit {1}.")
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsFalse(isTrue)
-                Assert.IsTrue(reason.IsSome)
-                Assert.IsTrue(reason.Value.Contains(1))
-                Assert.AreEqual(1, reason.Value.Count)
-            
-            match assignment.[1] with
-            | WatchList(list) -> Assert.Fail("Should have been unit {1}.")
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsTrue(isTrue)
-                Assert.IsTrue(reason.IsSome)
-                Assert.IsTrue(reason.Value.Contains(1))
-                Assert.AreEqual(1, reason.Value.Count)
+            Assert.AreEqual(2, assignment.Variables)
+            assertUnassigned assignment -2
+            assertUnassigned assignment 2
+
+            assertFalse assignment -1
+            assertTrue assignment 1
+
+            Assert.AreEqual(1, assignment.Trail.Length)
+            let (unit, reason) = assignment.Trail.Head
+            Assert.AreEqual(1, unit)
+            Assert.True(reason.IsSome)
+            Assert.AreEqual(clause, reason.Value)
+
             ()
 
         [<Test>]
         member public x.TestNegativeInitialUnitClause() =
-            let assignment = makeEmptyAssignment 2
-                             |> addClause [-1]
-            
-            Assert.AreEqual(4, assignment.Count)
-            Assert.AreEqual(WatchList List.empty, assignment.[-2])
-            Assert.AreEqual(WatchList List.empty, assignment.[2])
+            let clause = [| -2 |]
+            let (assignment, implications) =
+                (new Assignment(2), Queue.empty) |> Propagation.insert <| clause
+                |> Propagation.propagate
 
-            match assignment.[-1] with
-            | WatchList(list) -> Assert.Fail("Should have been unit {-1}.")
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsTrue(isTrue)
-                Assert.IsTrue(reason.IsSome)
-                Assert.IsTrue(reason.Value.Contains(-1))
-                Assert.AreEqual(1, reason.Value.Count)
-            
-            match assignment.[1] with
-            | WatchList(list) -> Assert.Fail("Should have been unit {-1}.")
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsFalse(isTrue)
-                Assert.IsTrue(reason.IsSome)
-                Assert.IsTrue(reason.Value.Contains(-1))
-                Assert.AreEqual(1, reason.Value.Count)
+            Assert.AreEqual(2, assignment.Variables)
+            assertUnassigned assignment -1
+            assertUnassigned assignment 1
+
+            assertFalse assignment 2
+            assertTrue assignment -2
+
+            Assert.AreEqual(1, assignment.Trail.Length)
+            let (unit, reason) = assignment.Trail.Head
+            Assert.AreEqual(-2, unit)
+            Assert.True(reason.IsSome)
+            Assert.AreEqual(clause, reason.Value)
+
             ()
 
         [<Test>]
         member public x.TestChoiceAndPropagation1() =
-            let assignment = makeEmptyAssignment 4
-                             |> addClause [-2; 3]
-                             |> choose -3
+            let clause = [| -2; 3 |]
+            let choice = -3
+            let (assignment, implications) =
+                (new Assignment(4), Queue.empty) |> Propagation.insert <| clause
+                |> Propagation.choose choice
 
-            Assert.AreEqual(8, assignment.Count)
-            Assert.AreEqual(WatchList List.empty, assignment.[-4])
-            Assert.AreEqual(WatchList List.empty, assignment.[-1])
-            Assert.AreEqual(WatchList List.empty, assignment.[1])
-            Assert.AreEqual(WatchList List.empty, assignment.[4])
-            
-            match assignment.[-3] with
-            | WatchList(list) -> Assert.Fail()
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsTrue(isTrue)
-                Assert.IsTrue(reason.IsNone)
-            match assignment.[-2] with
-            | WatchList(list) -> Assert.Fail()
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsTrue(isTrue)
-                Assert.IsTrue(reason.IsSome)
-                Assert.AreEqual(2, reason.Value.Count)
-                Assert.IsTrue(reason.Value.Contains(-2))
-                Assert.IsTrue(reason.Value.Contains(3))
-            match assignment.[2] with
-            | WatchList(list) -> Assert.Fail()
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsFalse(isTrue)
-                Assert.IsTrue(reason.IsSome)
-                Assert.AreEqual(2, reason.Value.Count)
-                Assert.IsTrue(reason.Value.Contains(-2))
-                Assert.IsTrue(reason.Value.Contains(3))
-            match assignment.[3] with
-            | WatchList(list) -> Assert.Fail()
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsFalse(isTrue)
-                Assert.IsTrue(reason.IsNone)
+            Assert.AreEqual(4, assignment.Variables)
+            assertUnassigned assignment -4
+            assertUnassigned assignment -1
+            assertUnassigned assignment 1
+            assertUnassigned assignment 4
+
+            assertTrue assignment -3
+            assertFalse assignment 3
+            assertTrue assignment -2
+            assertFalse assignment 2
+
+            match assignment.Trail with
+            | (secondLiteral, Some(secondReason)) :: (firstLiteral, None) :: [] ->
+                Assert.AreEqual(-2, secondLiteral)
+                Assert.AreEqual(clause, secondReason)
+                Assert.AreEqual(-3, firstLiteral)
+            | _ -> Assert.Fail "Incorrect Trail Configuration"
+
             ()
 
         [<Test>]
         member public x.TestChoiceAndPropagation2() =
-            let assignment = makeEmptyAssignment 4
-                             |> addClause [-2; 3]
-                             |> choose 2
+            let clause = [| -2; 3 |]
+            let choice = 2
+            let (assignment, implications) =
+                (new Assignment(4), Queue.empty) |> Propagation.insert <| clause
+                |> Propagation.choose choice
 
-            Assert.AreEqual(8, assignment.Count)
-            Assert.AreEqual(WatchList List.empty, assignment.[-4])
-            Assert.AreEqual(WatchList List.empty, assignment.[-1])
-            Assert.AreEqual(WatchList List.empty, assignment.[1])
-            Assert.AreEqual(WatchList List.empty, assignment.[4])
-            
-            match assignment.[-3] with
-            | WatchList(list) -> Assert.Fail()
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsFalse(isTrue)
-                Assert.IsTrue(reason.IsSome)
-                Assert.AreEqual(2, reason.Value.Count)
-                Assert.IsTrue(reason.Value.Contains(-2))
-                Assert.IsTrue(reason.Value.Contains(3))
-            match assignment.[-2] with
-            | WatchList(list) -> Assert.Fail()
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsFalse(isTrue)
-                Assert.IsTrue(reason.IsNone)
-            match assignment.[2] with
-            | WatchList(list) -> Assert.Fail()
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsTrue(isTrue)
-                Assert.IsTrue(reason.IsNone)
-            match assignment.[3] with
-            | WatchList(list) -> Assert.Fail()
-            | Value({IsTrue = isTrue; Reason = reason}) ->
-                Assert.IsTrue(isTrue)
-                Assert.IsTrue(reason.IsSome)
-                Assert.AreEqual(2, reason.Value.Count)
-                Assert.IsTrue(reason.Value.Contains(-2))
-                Assert.IsTrue(reason.Value.Contains(3))
+            Assert.AreEqual(4, assignment.Variables)
+            assertUnassigned assignment -4
+            assertUnassigned assignment -1
+            assertUnassigned assignment 1
+            assertUnassigned assignment 4
+
+            assertTrue assignment 2
+            assertFalse assignment -2
+            assertTrue assignment 3
+            assertFalse assignment -2
+
+            match assignment.Trail with
+            | (secondLiteral, Some(secondReason)) :: (firstLiteral, None) :: [] ->
+                Assert.AreEqual(3, secondLiteral)
+                Assert.AreEqual(clause, secondReason)
+                Assert.AreEqual(2, firstLiteral)
+            | _ -> Assert.Fail "Incorrect Trail Configuration"
+
             ()
 
         [<Test>]
         member public x.TestConflictAtConstruction() =
-            let assignment = makeEmptyAssignment 2
-                             |> addClause [1; 2]
-                             |> addClause [-1; 2]
+            let clause1 = [| 1; 2 |]
+            let clause2 = [| -1; 2 |]
+            let clause3 = [| -2 |]
+
             try
-                let result = addClause [-2] assignment
+                let result = 
+                    (new Assignment(2), Queue.empty)
+                    |> Propagation.insert <| clause1
+                    |> Propagation.insert <| clause2
+                    |> Propagation.insert <| clause3
+                    |> Propagation.propagate
                 Assert.Fail("Should have caused a conflict.")
             with
-            | Conflict(trail, reason, assignment) ->
-                let trail = List.rev trail
-                Assert.AreEqual(2, trail.Length)
-                Assert.AreEqual(-2, trail.Head)
-                Assert.AreEqual(1, System.Math.Abs trail.Tail.Head)
-                Assert.IsTrue(reason.IsSome)
-                Assert.AreEqual(2, reason.Value.Count)
-                Assert.IsTrue(reason.Value.Contains(2))
-                Assert.IsTrue(reason.Value.Contains(-1) || reason.Value.Contains(1))
+            | Conflict(assertingClause, trail) ->
+                match trail with
+                | (secondLiteral, Some(secondReason)) :: (firstLiteral, Some(firstReason)) :: [] ->
+                    Assert.AreEqual(-2, firstLiteral)
+                    Assert.AreEqual(clause3, firstReason)
+                    Assert.AreEqual(-1, secondLiteral)
+                    Assert.AreEqual(clause2, secondReason)
+                    Assert.IsTrue(assertingClause.IsSome)
+                    Assert.AreEqual(clause1, assertingClause.Value)
+                | _ -> Assert.Fail "Incorrect Trail Configuration"
             ()
 
         [<Test>]
         member public x.TestConflictAtChoice() =
-            let assignment = makeEmptyAssignment 3
-                             |> addClause [1; 2]
-                             |> addClause [-1; 2]
-                             |> addClause [-2; 3]
+            let clause1 = [| 1; 2 |]
+            let clause2 = [| -1; 2 |]
+            let clause3 = [| -2; 3 |]
+
             try
-                let result = choose -3 assignment
+                let result = 
+                    (new Assignment(3), Queue.empty)
+                    |> Propagation.insert <| clause1
+                    |> Propagation.insert <| clause2
+                    |> Propagation.insert <| clause3
+                    |> Propagation.propagate
+                    |> Propagation.choose -3
                 Assert.Fail("Should have caused a conflict.")
             with
-            | Conflict(trail, reason, assignment) ->
-                let trail = List.rev trail
-                Assert.AreEqual(3, trail.Length)
-                Assert.AreEqual(-3, trail.Head)
-                Assert.AreEqual(-2, trail.Tail.Head)
-                Assert.AreEqual(1, System.Math.Abs trail.Tail.Tail.Head)
-                Assert.IsTrue(reason.IsSome)
-                Assert.AreEqual(2, reason.Value.Count)
-                Assert.IsTrue(reason.Value.Contains(2))
-                Assert.IsTrue(reason.Value.Contains(-1) || reason.Value.Contains(1))
+            | Conflict(assertingClause, trail) ->
+                match trail with
+                | (thirdLiteral, Some(thirdReason)) ::
+                  (secondLiteral, Some(secondReason)) ::
+                  (firstLiteral, None) :: [] ->
+                    Assert.AreEqual(-3, firstLiteral)
+                    Assert.AreEqual(-2, secondLiteral)
+                    Assert.AreEqual(clause3, secondReason)
+                    Assert.AreEqual(-1, thirdLiteral)
+                    Assert.AreEqual(clause2, thirdReason)
+                    Assert.IsTrue(assertingClause.IsSome)
+                    Assert.AreEqual(clause1, assertingClause.Value)
+                | _ -> Assert.Fail "Incorrect Trail Configuration"
+
             ()
 
         [<Test>]
@@ -211,20 +205,21 @@ module PropagationTest =
             // Ex 4.2.4 - Handbook of Satisfiability (2009)
             // A Biere, M Heule, H van Maaren, T Walsh, Editors
             // J Marques-Silva , I Lynce, S Malik 
-            let assignment = makeEmptyAssignment 100
-                             |> addClause [1; 31; -2]   //ω1
-                             |> addClause [1; -3]       //ω2
-                             |> addClause [2; 3; 4]     //ω3
-                             |> addClause [-4; -5]      //ω4
-                             |> addClause [21; -4; -6]  //ω5
-                             |> addClause [5; 6]        //ω6
-                             |> choose -21
-                             |> choose -31
+            let propagation =
+                (new Assignment(100), Queue.empty)
+                |> Propagation.insert <| [|1; 31; -2|]   //ω1
+                |> Propagation.insert <| [|1; -3|]       //ω2
+                |> Propagation.insert <| [|2; 3; 4|]     //ω3
+                |> Propagation.insert <| [|-4; -5|]      //ω4
+                |> Propagation.insert <| [|21; -4; -6|]  //ω5
+                |> Propagation.insert <| [|5; 6|]        //ω6
+                |> Propagation.choose -21
+                |> Propagation.choose -31
             try
-                let result = choose -1 assignment
+                let result = Propagation.choose -1 propagation
                 Assert.Fail("Should have reached a conflict");
             with
-            | Conflict(trail, reason, assignment) ->
+            | Conflict(assertingClause, trail) ->
                 ()
 
             ()

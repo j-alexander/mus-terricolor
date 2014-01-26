@@ -5,12 +5,13 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>104954f7-2993-4842-9eff-e8d84c4f28e4</ProjectGuid>
+    <ProjectGuid>104954F7-2993-4842-9EFF-E8D84C4F28E4</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>Terricolor</RootNamespace>
     <AssemblyName>Terricolor</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <Name>Terricolor</Name>
+    <ProductVersion>12.0.0</ProductVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -39,16 +40,13 @@
   <ItemGroup>
     <Reference Include="FSharp.Core">
       <HintPath>..\packages\FSharp.Core.3.0.0.2\lib\net40\FSharp.Core.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="FSharpx.Core">
       <HintPath>..\packages\FSharpx.Core.1.8.41\lib\40\FSharpx.Core.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="policy.2.3.FSharp.Core">
       <HintPath>..\packages\FSharp.Core.3.0.0.2\lib\net40\policy.2.3.FSharp.Core.dll</HintPath>
-      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -56,14 +54,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Compile Include="Benchmarking.fs" />
-    <Compile Include="Concurrency.fs" />
-    <Compile Include="Primitives.fs" />
+    <Compile Include="Literal.fs" />
+    <Compile Include="Clause.fs" />
+    <Compile Include="Reason.fs" />
+    <Compile Include="Trail.fs" />
+    <Compile Include="Conflict.fs" />
+    <Compile Include="Assignment.fs" />
+    <Compile Include="Implication.fs" />
     <Compile Include="Propagation.fs" />
+    <Compile Include="Benchmarking.fs" />
+    <Compile Include="Primitives.fs" />
     <Compile Include="Learning.fs" />
     <Compile Include="Heuristics.fs" />
     <Compile Include="Search.fs" />
     <Compile Include="Reader.fs" />
+    <Compile Include="Concurrency.fs" />
     <Compile Include="Program.fs" />
     <None Include="packages.config" />
   </ItemGroup>

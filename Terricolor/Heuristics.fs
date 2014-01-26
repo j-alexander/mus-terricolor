@@ -1,5 +1,6 @@
 ﻿namespace Terricolor
 
+
 module Heuristics =
 
     open Primitives
@@ -32,43 +33,33 @@ module Heuristics =
 
     // select a better literal, if possible
     let select (state : State)  (defaultLiteral : Literal) =
-        let assignment = state.Assignment
+        let assignment, implications = state.Propagation
         let occurrences = state.Heuristic.Occurrences
-    
-        // a literal is satisfied it is assigned a true value
-        let literalIsSatisfied (literal : Literal) =
-            match assignment.[literal] with
-            | Value(value) -> value.IsTrue
-            | WatchList(_) -> true            
     
         // select the highest value unassigned literal by weight
         let selectTopLiteral (clause : Clause) =
-            let unassigned (literal : Literal) =
-                match assignment.[literal] with
-                | Value(_) -> None
-                | WatchList(_) -> Some(literal)
             let weights (literal : Literal) =
                 match Map.tryFind literal occurrences with
                 | None -> 0
                 | Some value -> -1 * value
             clause
-            |> Seq.choose unassigned
+            |> Seq.filter assignment.IsUnassigned
             |> Seq.sortBy weights
             |> Seq.head
 
         // reduce the learned clause set and select a literal
-        let rec selectFromLearnedClauses learnedClauses =
+        let rec selectFromLearnedClauses (learnedClauses : List<Clause>) =
             match learnedClauses with
             | [] ->
                 // no learned clauses remain -> choose a random assignment
                 [], selectRandom defaultLiteral
             | clause :: tail ->
-                if Set.exists literalIsSatisfied clause then
+                if Array.exists assignment.IsTrue clause then
                     selectFromLearnedClauses tail
                 else
                     learnedClauses, selectTopLiteral clause
         
-        let learnedClauses, choice = selectFromLearnedClauses state.Learned   
+        let learnedClauses, choice = selectFromLearnedClauses state.Learned
 
         { state with Learned = learnedClauses }, choice
         
@@ -77,7 +68,7 @@ module Heuristics =
         let fold x map =
             Map.add x (random.Next(low, high)) map
         let bifold map x =
-            fold (mirror x) (fold x map)
+            fold (Literal.mirror x) (fold x map)
         Seq.fold bifold Map.empty (seq { 1..variables })
 
     // define an initial heuristic

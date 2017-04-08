@@ -41,7 +41,7 @@ type Assignment (vector : Vector<Variable>, trail : Trail) =
             new Assignment(vector, trail)
 
     member x.IsAssigned (literal : Literal) : bool =
-        match find literal with Value(_,_) -> true | _ -> false
+        match find literal with Value(_) -> true | _ -> false
 
     member x.IsUnassigned (literal : Literal) : bool =
         match find literal with WatchList(_) -> true | _ -> false

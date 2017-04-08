@@ -57,7 +57,7 @@ module Benchmarking =
             let cycles = print("cycles", cycles)
             let learned = print("retained", learned)
                 
-            if benchmarking = false then
+            if not benchmarking then
                 printfn "%s, %s, %s" conflicts cycles learned
 
             if (stopwatch.Elapsed >= stopwatchTimeout) then

@@ -80,4 +80,4 @@ module Search =
                     search decisionLevels
 
         // begin search using the initial state
-        search (initial :: [])
+        search [initial]

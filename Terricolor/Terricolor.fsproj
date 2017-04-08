@@ -68,6 +68,7 @@
     <Compile Include="Search.fs" />
     <Compile Include="Reader.fs" />
     <Compile Include="Concurrency.fs" />
+    <Compile Include="CycleSearch.fs" />
     <Compile Include="Program.fs" />
     <None Include="packages.config" />
   </ItemGroup>

@@ -11,6 +11,7 @@ module Primitives =
 
     type State = { Propagation : Propagation ; Learned : List<Clause>; Heuristic : Heuristic; Active : Set<Clause> }
     
-    // define workflow exceptions
-    exception Unsatisfiable
-    exception Satisfiable of Assignment
+    type Solution =
+        | Unsatisfiable
+        | Satisfiable of Assignment
+    type Timeout = { State : State }

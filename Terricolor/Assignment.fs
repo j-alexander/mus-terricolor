@@ -20,16 +20,18 @@ type Assignment (vector : Vector<Variable>, trail : Trail) =
     member x.Trail = trail
     member x.Variables = vector.Length
 
-    member x.Assign (literal : Literal) (reason : Reason) : Assignment * List<Clause> =
+    member x.Assign (literal : Literal) (reason : Reason) : Result<Assignment * List<Clause>, Conflict> =
         match find literal with
         | Value(assigned, _) ->
-            if assigned = literal then x, []
-            else raise (Conflict(reason, (literal, reason) :: trail))
+            if assigned = literal then
+                Success(x, [])
+            else
+                Failure{ Conflict.Reason=reason; Trail=(literal, reason) :: trail }
         | WatchList(watches) ->
             let value = (literal, reason)
             let vector = update literal (Value value)
             let trail = value :: trail
-            new Assignment(vector, trail), watches
+            Success(new Assignment(vector, trail), watches)
 
     member x.Watch (literal : Literal) (clause : Clause) : Assignment =
         match find literal with

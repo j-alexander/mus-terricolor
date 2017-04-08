@@ -61,4 +61,4 @@ module Reader =
 
         stopwatch.Stop()
 
-        (variableCount, clauseCount, clauses, stopwatch.ElapsedMilliseconds)
+        (variableCount, clauseCount, List.ofSeq clauses, stopwatch.ElapsedMilliseconds)

@@ -37,11 +37,9 @@ type Verification() =
         let contents = File.ReadAllText(file)
         let benchmark = compare contents
         let variableCount, clauseCount, clauses, time = Reader.read(contents)
-        try
-            CycleSearch.run Environment.ProcessorCount variableCount clauses
+        
+        match CycleSearch.run Environment.ProcessorCount variableCount clauses with
             
-            Assert.Fail()
-        with
         | Satisfiable(solution) ->
             let decisions =
                 let filter = function (literal, None) -> Some(literal) | _ -> None
@@ -61,19 +59,18 @@ type Verification() =
 
             Assert.True(benchmark.Contains "s SATISFIABLE")
             Assert.True(verification.Contains "s SATISFIABLE")
-        | Conflict (reason, trail) ->
-            Assert.True(benchmark.Contains "s UNSATISFIABLE")
+
         | Unsatisfiable ->
             Assert.True(benchmark.Contains "s UNSATISFIABLE")
 
     let verifyRutgers file = 
         verify(Path.Combine(dimacs.FullName, "Rutgers", file))
 
-    [<Test>]
+    [<Test; Repeat(10)>]
     member x.Aim_50_1_6_yes1_4() =
         verifyRutgers "aim-50-1_6-yes1-4.cnf"
 
-    [<Test>]
+    [<Test; Repeat(10)>]
     member x.Aim_100_1_6_no_1() =
         verifyRutgers "aim-100-1_6-no-1.cnf"
 
@@ -81,15 +78,15 @@ type Verification() =
     member x.Bf0432_007() =
         verifyRutgers "bf0432-007.cnf"
 
-    [<Test>]
+    [<Test; Repeat(10)>]
     member x.Dubois20() =
         verifyRutgers "dubois20.cnf"
 
-    [<Test>]
+    [<Test; Repeat(10)>]
     member x.Dubois21() =
         verifyRutgers "dubois21.cnf"
 
-    [<Test>]
+    [<Test; Repeat(10)>]
     member x.Dubois22() =
         verifyRutgers "dubois22.cnf"
 
@@ -97,15 +94,15 @@ type Verification() =
     member x.Hole6() =
         verifyRutgers "hole6.cnf"
 
-    [<Test>]
+    [<Test; Repeat(10)>]
     member x.Par8_1_c() =
         verifyRutgers "par8-1-c.cnf"
 
-    [<Test>]
+    [<Test; Repeat(10)>]
     member x.Quinn() =
         verifyRutgers "quinn.cnf"
 
-    [<Test>]
+    [<Test; Repeat(10)>]
     member x.Simple_v3_c2() =
         verifyRutgers "simple_v3_c2.cnf"
 

@@ -22,28 +22,32 @@ module LearningTest =
             // J Marques-Silva , I Lynce, S Malik 
             let propagation =
                 (new Assignment(100), Queue.empty)
-                |> Propagation.insert <| [|1; 31; -2|]   //ω1
-                |> Propagation.insert <| [|1; -3|]       //ω2
-                |> Propagation.insert <| [|2; 3; 4|]     //ω3
-                |> Propagation.insert <| [|-4; -5|]      //ω4
-                |> Propagation.insert <| [|21; -4; -6|]  //ω5
-                |> Propagation.insert <| [|5; 6|]        //ω6
+                |> Propagation.insert <| [|1; 31; -2|]      //ω1
+                |> Propagation.bindInsert <| [|1; -3|]      //ω2
+                |> Propagation.bindInsert <| [|2; 3; 4|]    //ω3
+                |> Propagation.bindInsert <| [|-4; -5|]     //ω4
+                |> Propagation.bindInsert <| [|21; -4; -6|] //ω5
+                |> Propagation.bindInsert <| [|5; 6|]       //ω6
                 |> Propagation.choose -21
                 |> Propagation.choose -31
-            try
+
+            match propagation with
+            | Failure conflict ->
+                Assert.Fail("Should not have reached a conflict.")
+            | propagation ->
                 let propagation =
                     propagation
                     |> Propagation.choose -1 
                     |> Propagation.propagate
-                Assert.Fail("Should have reached a conflict.")
-            with
-            | Conflict(reason, trail) ->
-                let learnedClause, conflictClauses = learnFromConflict(trail, reason)
-                let learnedClauseSet = Set.ofArray learnedClause
-                Assert.AreEqual(2, learnedClause.Length)
-                Assert.IsTrue(learnedClauseSet.Contains -4)      //UIP(¬x4)
-                Assert.IsTrue(learnedClauseSet.Contains 21)
-            ()
+                match propagation with
+                | Success _ ->
+                    Assert.Fail("Should have reached a conflict.")
+                | Failure { Conflict.Reason=reason; Trail=trail } ->
+                    let learnedClause, conflictClauses = learnFromConflict(trail, reason)
+                    let learnedClauseSet = Set.ofArray learnedClause
+                    Assert.AreEqual(2, learnedClause.Length)
+                    Assert.IsTrue(learnedClauseSet.Contains -4)      //UIP(¬x4)
+                    Assert.IsTrue(learnedClauseSet.Contains 21)
 
         [<Test>]
         member public x.TestUnsatisfiableProblem() =
@@ -51,29 +55,34 @@ module LearningTest =
             let propagation =
                 (new Assignment(3), Queue.empty)
                 |> Propagation.insert <| [|1; 2; 3|]
-                |> Propagation.insert <| [|-1; -2|]
-                |> Propagation.insert <| [|-1; -2|]
-                |> Propagation.insert <| [|-2; -3|]
-                |> Propagation.insert <| [|1; -2|]
-                |> Propagation.insert <| [|2; -3|]
-                |> Propagation.insert <| [|3; -1|]
-            try
-                let propagation =
-                    propagation
-                    |> Propagation.choose 1 
-                    |> Propagation.propagate
-                Assert.Fail("Should have reached a conflict.")
-            with
-            | Conflict(reason, trail) ->
-                let learnedClause, conflictClauses = learnFromConflict(trail, reason)
-                try
+                |> Propagation.bindInsert <| [|-1; -2|]
+                |> Propagation.bindInsert <| [|-1; -2|]
+                |> Propagation.bindInsert <| [|-2; -3|]
+                |> Propagation.bindInsert <| [|1; -2|]
+                |> Propagation.bindInsert <| [|2; -3|]
+                |> Propagation.bindInsert <| [|3; -1|]
+
+            match propagation with
+            | Failure conflict ->
+                Assert.Fail("Should not have reached a conflict.")
+            | propagation ->
+                propagation
+                |> Propagation.choose 1 
+                |> Propagation.propagate
+                |>
+                function
+                | Success _ ->
+                    Assert.Fail("Should have reached a conflict.")
+                | Failure { Conflict.Reason=reason; Trail=trail } ->
+                    let learnedClause, conflictClauses = learnFromConflict(trail, reason)
                     let propagation =
                         propagation
-                        |> Propagation.insert <| learnedClause
+                        |> Propagation.bindInsert <| learnedClause
                         |> Propagation.propagate
-                    Assert.Fail("Should have reached a conflict.")
-                with
-                | Conflict(reason, trail) ->
-                    // conflict encountered just integrating the learned clause
-                ()
-            ()
+
+                    match propagation with
+                    | Success _ ->
+                        Assert.Fail("Should have reached a conflict.")
+                    | _ ->
+                        // conflict encountered just integrating the learned clause
+                        ()

@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <Compile Include="Result.fs" />
     <Compile Include="Literal.fs" />
     <Compile Include="Clause.fs" />
     <Compile Include="Reason.fs" />

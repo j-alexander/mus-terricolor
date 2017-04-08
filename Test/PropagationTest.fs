@@ -29,6 +29,15 @@ module PropagationTest =
             Assert.IsFalse(assignment.IsUnassigned literal)
             Assert.IsTrue(assignment.IsAssigned literal)
 
+        let fail x = Assert.Fail(x) ; failwith x
+
+        let assertPropagation : Result<Propagation,Conflict> -> Propagation =
+            function
+            | Success propagation -> propagation
+            | Failure conflict ->
+                sprintf "Unexpected conflict: %A" conflict
+                |> fail
+
         [<Test>]
         member public x.TestEmpty() =
 
@@ -47,6 +56,7 @@ module PropagationTest =
             let (assignment, implications) =
                 (new Assignment(2), Queue.empty) |> Propagation.insert <| clause
                 |> Propagation.propagate
+                |> assertPropagation
 
             Assert.AreEqual(2, assignment.Variables)
             assertUnassigned assignment -2
@@ -69,6 +79,7 @@ module PropagationTest =
             let (assignment, implications) =
                 (new Assignment(2), Queue.empty) |> Propagation.insert <| clause
                 |> Propagation.propagate
+                |> assertPropagation
 
             Assert.AreEqual(2, assignment.Variables)
             assertUnassigned assignment -1
@@ -83,7 +94,6 @@ module PropagationTest =
             Assert.True(reason.IsSome)
             Assert.AreEqual(clause, reason.Value)
 
-            ()
 
         [<Test>]
         member public x.TestChoiceAndPropagation1() =
@@ -92,6 +102,7 @@ module PropagationTest =
             let (assignment, implications) =
                 (new Assignment(4), Queue.empty) |> Propagation.insert <| clause
                 |> Propagation.choose choice
+                |> assertPropagation
 
             Assert.AreEqual(4, assignment.Variables)
             assertUnassigned assignment -4
@@ -109,9 +120,9 @@ module PropagationTest =
                 Assert.AreEqual(-2, secondLiteral)
                 Assert.AreEqual(clause, secondReason)
                 Assert.AreEqual(-3, firstLiteral)
-            | _ -> Assert.Fail "Incorrect Trail Configuration"
+            | _ ->
+                Assert.Fail "Incorrect Trail Configuration"
 
-            ()
 
         [<Test>]
         member public x.TestChoiceAndPropagation2() =
@@ -120,6 +131,7 @@ module PropagationTest =
             let (assignment, implications) =
                 (new Assignment(4), Queue.empty) |> Propagation.insert <| clause
                 |> Propagation.choose choice
+                |> assertPropagation
 
             Assert.AreEqual(4, assignment.Variables)
             assertUnassigned assignment -4
@@ -137,9 +149,9 @@ module PropagationTest =
                 Assert.AreEqual(3, secondLiteral)
                 Assert.AreEqual(clause, secondReason)
                 Assert.AreEqual(2, firstLiteral)
-            | _ -> Assert.Fail "Incorrect Trail Configuration"
+            | _ ->
+                Assert.Fail "Incorrect Trail Configuration"
 
-            ()
 
         [<Test>]
         member public x.TestConflictAtConstruction() =
@@ -147,16 +159,17 @@ module PropagationTest =
             let clause2 = [| -1; 2 |]
             let clause3 = [| -2 |]
 
-            try
-                let result = 
-                    (new Assignment(2), Queue.empty)
-                    |> Propagation.insert <| clause1
-                    |> Propagation.insert <| clause2
-                    |> Propagation.insert <| clause3
-                    |> Propagation.propagate
+            let result = 
+                (new Assignment(2), Queue.empty)
+                |> Propagation.insert <| clause1
+                |> Propagation.bindInsert <| clause2
+                |> Propagation.bindInsert <| clause3
+                |> Propagation.propagate
+
+            match result with
+            | Success _ ->
                 Assert.Fail("Should have caused a conflict.")
-            with
-            | Conflict(assertingClause, trail) ->
+            | Failure {Conflict.Reason=assertingClause; Trail=trail} ->
                 match trail with
                 | (secondLiteral, Some(secondReason)) :: (firstLiteral, Some(firstReason)) :: [] ->
                     Assert.AreEqual(-2, firstLiteral)
@@ -165,8 +178,8 @@ module PropagationTest =
                     Assert.AreEqual(clause2, secondReason)
                     Assert.IsTrue(assertingClause.IsSome)
                     Assert.AreEqual(clause1, assertingClause.Value)
-                | _ -> Assert.Fail "Incorrect Trail Configuration"
-            ()
+                | _ ->  
+                    Assert.Fail "Incorrect Trail Configuration"
 
         [<Test>]
         member public x.TestConflictAtChoice() =
@@ -174,17 +187,18 @@ module PropagationTest =
             let clause2 = [| -1; 2 |]
             let clause3 = [| -2; 3 |]
 
-            try
-                let result = 
-                    (new Assignment(3), Queue.empty)
-                    |> Propagation.insert <| clause1
-                    |> Propagation.insert <| clause2
-                    |> Propagation.insert <| clause3
-                    |> Propagation.propagate
-                    |> Propagation.choose -3
+            let result = 
+                (new Assignment(3), Queue.empty)
+                |> Propagation.insert <| clause1
+                |> Propagation.bindInsert <| clause2
+                |> Propagation.bindInsert <| clause3
+                |> Propagation.propagate
+                |> Propagation.choose -3
+            
+            match result with
+            | Success _ ->
                 Assert.Fail("Should have caused a conflict.")
-            with
-            | Conflict(assertingClause, trail) ->
+            | Failure {Conflict.Reason=assertingClause; Trail=trail } ->
                 match trail with
                 | (thirdLiteral, Some(thirdReason)) ::
                   (secondLiteral, Some(secondReason)) ::
@@ -196,9 +210,9 @@ module PropagationTest =
                     Assert.AreEqual(clause2, thirdReason)
                     Assert.IsTrue(assertingClause.IsSome)
                     Assert.AreEqual(clause1, assertingClause.Value)
-                | _ -> Assert.Fail "Incorrect Trail Configuration"
+                | _ ->
+                    Assert.Fail "Incorrect Trail Configuration"
 
-            ()
 
         [<Test>]
         member public x.TestMultilevelConflict() =
@@ -207,19 +221,18 @@ module PropagationTest =
             // J Marques-Silva , I Lynce, S Malik 
             let propagation =
                 (new Assignment(100), Queue.empty)
-                |> Propagation.insert <| [|1; 31; -2|]   //ω1
-                |> Propagation.insert <| [|1; -3|]       //ω2
-                |> Propagation.insert <| [|2; 3; 4|]     //ω3
-                |> Propagation.insert <| [|-4; -5|]      //ω4
-                |> Propagation.insert <| [|21; -4; -6|]  //ω5
-                |> Propagation.insert <| [|5; 6|]        //ω6
+                |> Propagation.insert <| [|1; 31; -2|]      //ω1
+                |> Propagation.bindInsert <| [|1; -3|]      //ω2
+                |> Propagation.bindInsert <| [|2; 3; 4|]    //ω3
+                |> Propagation.bindInsert <| [|-4; -5|]     //ω4
+                |> Propagation.bindInsert <| [|21; -4; -6|] //ω5
+                |> Propagation.bindInsert <| [|5; 6|]       //ω6
                 |> Propagation.choose -21
                 |> Propagation.choose -31
-            try
-                let result = Propagation.choose -1 propagation
-                Assert.Fail("Should have reached a conflict");
-            with
-            | Conflict(assertingClause, trail) ->
-                ()
+            
+            let result = Propagation.choose -1 propagation
 
-            ()
+            match result with
+            | Success _ ->
+                Assert.Fail("Should have reached a conflict");
+            | _ -> ()

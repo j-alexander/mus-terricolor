@@ -1,3 +1,5 @@
 namespace Terricolor
 
-exception Conflict of Reason * Trail
+type Conflict = 
+    { Reason:Reason
+      Trail:Trail }

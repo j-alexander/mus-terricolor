@@ -48,25 +48,23 @@ module Program =
             printfn "c            [%d variables, %d clauses (%d ms)]" variableCount clauseCount time
             let watch = Stopwatch.StartNew()
 
+            // increase the priority in the system scheduler
             try
-                // increase the priority in the system scheduler
-                try
-                    Process.GetCurrentProcess().PriorityClass <- ProcessPriorityClass.High;
-                with
-                | :? Win32Exception -> printfn "c Unable to boost PriorityClass"
-                
-                // use the appropriate number of concurrent workers
-                let concurrency =
-                    if isOption "-Parallel" then Environment.ProcessorCount
-                    else 1
-
-                // start the benchmarking
-                if isOption "-Benchmark" then startTimer()
-                
-                printfn "c Searching"
-                CycleSearch.run concurrency variableCount clauses
-
+                Process.GetCurrentProcess().PriorityClass <- ProcessPriorityClass.High;
             with
+            | :? Win32Exception -> printfn "c Unable to boost PriorityClass"
+                
+            // use the appropriate number of concurrent workers
+            let concurrency =
+                if isOption "-Parallel" then Environment.ProcessorCount
+                else 1
+
+            // start the benchmarking
+            if isOption "-Benchmark" then startTimer()
+                
+            printfn "c Searching"
+            match CycleSearch.run concurrency variableCount clauses with
+
             // a solution has been found, and should be printed
             | Satisfiable(solution) ->
                 let decisions =
@@ -80,10 +78,6 @@ module Program =
                     printfn "0"
                 for decision in decisions do
                     printfn "%d 0" decision
-
-            // a trivial conflict was encountered in the initial problem (i.e. {{1} {-1}})
-            | Conflict (reason, trail) ->
-                printfn "Unsatisfiable (Trivial Case)"
 
             // the problem has no solution
             | Unsatisfiable ->

@@ -22,12 +22,12 @@ module LearningTest =
             // J Marques-Silva , I Lynce, S Malik 
             let propagation =
                 (new Assignment(100), Queue.empty)
-                |> Propagation.insert <| [|1; 31; -2|]      //ω1
-                |> Propagation.bindInsert <| [|1; -3|]      //ω2
-                |> Propagation.bindInsert <| [|2; 3; 4|]    //ω3
-                |> Propagation.bindInsert <| [|-4; -5|]     //ω4
-                |> Propagation.bindInsert <| [|21; -4; -6|] //ω5
-                |> Propagation.bindInsert <| [|5; 6|]       //ω6
+                |> Propagation.insert [|1; 31; -2|]      //ω1
+                |> Propagation.bindInsert [|1; -3|]      //ω2
+                |> Propagation.bindInsert [|2; 3; 4|]    //ω3
+                |> Propagation.bindInsert [|-4; -5|]     //ω4
+                |> Propagation.bindInsert [|21; -4; -6|] //ω5
+                |> Propagation.bindInsert [|5; 6|]       //ω6
                 |> Propagation.choose -21
                 |> Propagation.choose -31
 
@@ -54,13 +54,13 @@ module LearningTest =
 
             let propagation =
                 (new Assignment(3), Queue.empty)
-                |> Propagation.insert <| [|1; 2; 3|]
-                |> Propagation.bindInsert <| [|-1; -2|]
-                |> Propagation.bindInsert <| [|-1; -2|]
-                |> Propagation.bindInsert <| [|-2; -3|]
-                |> Propagation.bindInsert <| [|1; -2|]
-                |> Propagation.bindInsert <| [|2; -3|]
-                |> Propagation.bindInsert <| [|3; -1|]
+                |> Propagation.insert [|1; 2; 3|]
+                |> Propagation.bindInsert [|-1; -2|]
+                |> Propagation.bindInsert [|-1; -2|]
+                |> Propagation.bindInsert [|-2; -3|]
+                |> Propagation.bindInsert [|1; -2|]
+                |> Propagation.bindInsert [|2; -3|]
+                |> Propagation.bindInsert [|3; -1|]
 
             match propagation with
             | Failure conflict ->
@@ -77,7 +77,7 @@ module LearningTest =
                     let learnedClause, conflictClauses = learnFromConflict(trail, reason)
                     let propagation =
                         propagation
-                        |> Propagation.bindInsert <| learnedClause
+                        |> Propagation.bindInsert learnedClause
                         |> Propagation.propagate
 
                     match propagation with

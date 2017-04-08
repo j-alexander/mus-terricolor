@@ -22,8 +22,8 @@ module CycleSearch =
         let random = new Random()
         
         // construct the initial logic program
-        clauses
-        |> Propagation.insertFold (new Assignment(variableCount), Queue.empty)
+        (new Assignment(variableCount), Queue.empty)
+        |> Propagation.insertFold clauses
         |> Propagation.propagate
         |>
         function
@@ -42,7 +42,7 @@ module CycleSearch =
             let restart (state:State) =
                 // for now, simply retain the active set
                 let retained = Set.toList state.Active
-                Propagation.insertFold program retained
+                Propagation.insertFold retained program
                 |> Propagation.propagate
                 |>
                 function

@@ -51,7 +51,7 @@ module Search =
                                 // define backtracking with assertion and integration
                                 let integrate (state : State) = 
                                     match (state.Propagation
-                                           |> Propagation.insert <| learnedClause
+                                           |> Propagation.insert learnedClause
                                            |> Propagation.propagate) with
                                     | Failure conflict -> None
                                     | Success propagation ->

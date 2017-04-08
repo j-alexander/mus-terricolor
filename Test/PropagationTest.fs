@@ -54,7 +54,8 @@ module PropagationTest =
         member public x.TestPositiveInitialUnitClause() =
             let clause = [| 1 |]
             let (assignment, implications) =
-                (new Assignment(2), Queue.empty) |> Propagation.insert <| clause
+                (new Assignment(2), Queue.empty)
+                |> Propagation.insert clause
                 |> Propagation.propagate
                 |> assertPropagation
 
@@ -77,7 +78,8 @@ module PropagationTest =
         member public x.TestNegativeInitialUnitClause() =
             let clause = [| -2 |]
             let (assignment, implications) =
-                (new Assignment(2), Queue.empty) |> Propagation.insert <| clause
+                (new Assignment(2), Queue.empty)
+                |> Propagation.insert clause
                 |> Propagation.propagate
                 |> assertPropagation
 
@@ -100,7 +102,8 @@ module PropagationTest =
             let clause = [| -2; 3 |]
             let choice = -3
             let (assignment, implications) =
-                (new Assignment(4), Queue.empty) |> Propagation.insert <| clause
+                (new Assignment(4), Queue.empty)
+                |> Propagation.insert clause
                 |> Propagation.choose choice
                 |> assertPropagation
 
@@ -116,7 +119,8 @@ module PropagationTest =
             assertFalse assignment 2
 
             match assignment.Trail with
-            | (secondLiteral, Some(secondReason)) :: (firstLiteral, None) :: [] ->
+            | [ secondLiteral, Some secondReason
+                firstLiteral, None ] ->
                 Assert.AreEqual(-2, secondLiteral)
                 Assert.AreEqual(clause, secondReason)
                 Assert.AreEqual(-3, firstLiteral)
@@ -129,7 +133,8 @@ module PropagationTest =
             let clause = [| -2; 3 |]
             let choice = 2
             let (assignment, implications) =
-                (new Assignment(4), Queue.empty) |> Propagation.insert <| clause
+                (new Assignment(4), Queue.empty)
+                |> Propagation.insert clause
                 |> Propagation.choose choice
                 |> assertPropagation
 
@@ -145,7 +150,8 @@ module PropagationTest =
             assertFalse assignment -2
 
             match assignment.Trail with
-            | (secondLiteral, Some(secondReason)) :: (firstLiteral, None) :: [] ->
+            | [ secondLiteral, Some secondReason
+                firstLiteral, None ] ->
                 Assert.AreEqual(3, secondLiteral)
                 Assert.AreEqual(clause, secondReason)
                 Assert.AreEqual(2, firstLiteral)
@@ -161,9 +167,9 @@ module PropagationTest =
 
             let result = 
                 (new Assignment(2), Queue.empty)
-                |> Propagation.insert <| clause1
-                |> Propagation.bindInsert <| clause2
-                |> Propagation.bindInsert <| clause3
+                |> Propagation.insert clause1
+                |> Propagation.bindInsert clause2
+                |> Propagation.bindInsert clause3
                 |> Propagation.propagate
 
             match result with
@@ -171,7 +177,8 @@ module PropagationTest =
                 Assert.Fail("Should have caused a conflict.")
             | Failure {Conflict.Reason=assertingClause; Trail=trail} ->
                 match trail with
-                | (secondLiteral, Some(secondReason)) :: (firstLiteral, Some(firstReason)) :: [] ->
+                | [ secondLiteral, Some secondReason
+                    firstLiteral, Some firstReason ] ->
                     Assert.AreEqual(-2, firstLiteral)
                     Assert.AreEqual(clause3, firstReason)
                     Assert.AreEqual(-1, secondLiteral)
@@ -189,9 +196,9 @@ module PropagationTest =
 
             let result = 
                 (new Assignment(3), Queue.empty)
-                |> Propagation.insert <| clause1
-                |> Propagation.bindInsert <| clause2
-                |> Propagation.bindInsert <| clause3
+                |> Propagation.insert clause1
+                |> Propagation.bindInsert clause2
+                |> Propagation.bindInsert clause3
                 |> Propagation.propagate
                 |> Propagation.choose -3
             
@@ -200,9 +207,9 @@ module PropagationTest =
                 Assert.Fail("Should have caused a conflict.")
             | Failure {Conflict.Reason=assertingClause; Trail=trail } ->
                 match trail with
-                | (thirdLiteral, Some(thirdReason)) ::
-                  (secondLiteral, Some(secondReason)) ::
-                  (firstLiteral, None) :: [] ->
+                | [ thirdLiteral, Some thirdReason 
+                    secondLiteral, Some secondReason
+                    firstLiteral, None ] ->
                     Assert.AreEqual(-3, firstLiteral)
                     Assert.AreEqual(-2, secondLiteral)
                     Assert.AreEqual(clause3, secondReason)
@@ -221,12 +228,12 @@ module PropagationTest =
             // J Marques-Silva , I Lynce, S Malik 
             let propagation =
                 (new Assignment(100), Queue.empty)
-                |> Propagation.insert <| [|1; 31; -2|]      //ω1
-                |> Propagation.bindInsert <| [|1; -3|]      //ω2
-                |> Propagation.bindInsert <| [|2; 3; 4|]    //ω3
-                |> Propagation.bindInsert <| [|-4; -5|]     //ω4
-                |> Propagation.bindInsert <| [|21; -4; -6|] //ω5
-                |> Propagation.bindInsert <| [|5; 6|]       //ω6
+                |> Propagation.insert [|1; 31; -2|]      //ω1
+                |> Propagation.bindInsert [|1; -3|]      //ω2
+                |> Propagation.bindInsert [|2; 3; 4|]    //ω3
+                |> Propagation.bindInsert [|-4; -5|]     //ω4
+                |> Propagation.bindInsert [|21; -4; -6|] //ω5
+                |> Propagation.bindInsert [|5; 6|]       //ω6
                 |> Propagation.choose -21
                 |> Propagation.choose -31
             

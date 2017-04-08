@@ -14,7 +14,3 @@ module Primitives =
     // define workflow exceptions
     exception Unsatisfiable
     exception Satisfiable of Assignment
-        
-    
-    // select a random number generator
-    let random = new System.Random()

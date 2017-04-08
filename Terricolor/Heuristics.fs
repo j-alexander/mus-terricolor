@@ -3,6 +3,7 @@
 
 module Heuristics =
 
+    open System
     open Primitives
     
     let bump conflictClauses (heuristic : Heuristic)  =
@@ -27,12 +28,16 @@ module Heuristics =
               Occurrences = boost (Map.map reduce heuristic.Occurrences) conflictClauses }
               
     // random assignment for literal decisions
-    let selectRandom (literal : Literal) =
-        if random.NextDouble() > 0.5 then literal
+    let threshold (threshold:float) (random:Random) (literal:Literal) =
+        if random.NextDouble() > threshold then literal
         else literal * -1
+        
+    // random assignment for literal decisions with 50:50 odds
+    let coinToss (random:Random) (literal:Literal) =
+        threshold 0.5 random literal
 
-    // select a better literal, if possible
-    let select (state : State)  (defaultLiteral : Literal) =
+    // select a better literal, if possible, with custom value function
+    let selectBy (fn:Literal->Literal) (state : State)  (defaultLiteral : Literal) =
         let assignment, implications = state.Propagation
         let occurrences = state.Heuristic.Occurrences
     
@@ -51,8 +56,8 @@ module Heuristics =
         let rec selectFromLearnedClauses (learnedClauses : List<Clause>) =
             match learnedClauses with
             | [] ->
-                // no learned clauses remain -> choose a random assignment
-                [], selectRandom defaultLiteral
+                // no learned clauses remain -> choose an assignment
+                [], fn defaultLiteral
             | clause :: tail ->
                 if Array.exists assignment.IsTrue clause then
                     selectFromLearnedClauses tail
@@ -63,8 +68,11 @@ module Heuristics =
 
         { state with Learned = learnedClauses }, choice
         
+    // select a better literal, if possible
+    let select random = selectBy (coinToss random)
+        
     // define how to make a random set of occurrences
-    let makeRandomOccurrences variables low high =
+    let makeOccurrences (random:Random) variables low high =
         let fold x map =
             Map.add x (random.Next(low, high)) map
         let bifold map x =
@@ -72,6 +80,6 @@ module Heuristics =
         Seq.fold bifold Map.empty (seq { 1..variables })
 
     // define an initial heuristic
-    let makeHeuristic variables =
+    let makeHeuristic (random:Random) variables =
         { Steps = 0;
-          Occurrences = makeRandomOccurrences variables 1 10 }
+          Occurrences = makeOccurrences random variables 1 10 }

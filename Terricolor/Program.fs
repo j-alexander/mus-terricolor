@@ -71,13 +71,14 @@ module Program =
                 // start the benchmarking
                 if isOption "-Benchmark" then startTimer()
 
+                let random = new Random()
                 let start state = 
                     // define the timeout for this item of work
                     let timeout = TimeSpan.FromMilliseconds(watch.Elapsed.TotalMilliseconds * random.NextDouble())
                     // update benchmark statistics
                     incrementCycles()
                     // start this cycle
-                    Task.Run (fun () -> startSearch state timeout)
+                    Task.Run (fun () -> startSearch random state timeout)
                 // define how to restart a state
                 let restart state =
                     // for now, simply retain the active set
@@ -94,7 +95,7 @@ module Program =
                         { Propagation = program;
                           Active = Set.empty;
                           Learned = [];
-                          Heuristic = makeHeuristic variableCount; }
+                          Heuristic = makeHeuristic random variableCount; }
                     start state
 
                 // cycle through completed jobs reissuing as needed

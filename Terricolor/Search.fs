@@ -14,7 +14,7 @@ module Search =
     open Heuristics
 
     // start searching for solutions to the program and stop when timeout is exceeded
-    let startSearch (initial : State) timeout =
+    let startSearch (random:Random) (initial : State) timeout =
         
         // capture the high-performance timer's clock value to mark our start time
         let stopwatch = Stopwatch.StartNew()
@@ -43,7 +43,7 @@ module Search =
                             // all variables have been assigned
                             raise (Satisfiable(assignment))
                         | Some(literal) ->
-                            let current, choice = select current literal
+                            let current, choice = select random current literal
                             try
                                 // attempt this literal assignment
                                 let current = {

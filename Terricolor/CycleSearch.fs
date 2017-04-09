@@ -39,19 +39,26 @@ module CycleSearch =
                 async {
 
                     let timeout _ =
-                        random.NextDouble() * watch.Elapsed.TotalMilliseconds
+                        random.NextDouble() * random.NextDouble() * watch.Elapsed.TotalMilliseconds
                         |> TimeSpan.FromMilliseconds
 
-                    let start (state:State) =
+                    let startWith (clauses:Clause Set) (state:State) =
                         Async.Start <| async {
-                            return
-                                startSearch random state (timeout())
-                                |> Message.Update
-                                |> inbox.Post
+                            let propagation =
+                                state.Propagation
+                                |> Propagation.insertFold (Set.toList clauses)
+                                |> Propagation.propagate
+                            match propagation with
+                            | Failure conflict ->
+                                Success Unsatisfiable
+                            | Success propagation ->
+                                { state with Propagation = propagation }
+                                |> startSearch random (timeout())
+                            |> Message.Update
+                            |> inbox.Post
                         }
 
                     let rec manage (report:AsyncReplyChannel<Solution>)
-                                   (propagation:Propagation)
                                    (clauses:Set<Clause>) =
                         async {
                             let! message = inbox.Receive()
@@ -61,33 +68,34 @@ module CycleSearch =
                             | Message.Update (Failure {Timeout.State=state }) ->
                                 let learned = state.Active - clauses
                                 let clauses = Set.union clauses learned
-                                let propagation =
-                                    propagation
-                                    |> Propagation.insertFold (Set.toList learned)
-                                    |> Propagation.propagate
-                                match propagation with
-                                | Failure conflict ->
-                                    report.Reply(Unsatisfiable)
-                                | Success propagation ->
 
-                                    let threshold = random.NextDouble()
-                                    if threshold < 0.25 then
-                                        // start knowing nothing
-                                        start { Propagation = program
-                                                Active = Set.empty
-                                                Learned = Set.empty
-                                                Heuristic = makeHeuristic random variables }
-                                    elif threshold < 0.5 then
-                                        // continue
-                                        start state
-                                    else
-                                        // restart knowing everything so far
-                                        start { Propagation = propagation
-                                                Active = Set.empty
-                                                Learned = clauses
-                                                Heuristic = makeHeuristic random variables }
+                                let threshold = random.NextDouble()
+                                if threshold < 0.25 then
+                                    // continue
+                                    startWith Set.empty state
+                                elif threshold < 0.5 then
+                                    // start knowing nothing
+                                    { Propagation = program
+                                      Active = Set.empty
+                                      Learned = Set.empty
+                                      Heuristic = makeHeuristic random variables }
+                                    |> startWith Set.empty 
+                                elif threshold < 0.7 then
+                                    // restart knowing everything so far, fresh heuristics
+                                    { Propagation = program
+                                      Active = Set.empty
+                                      Learned = Set.empty
+                                      Heuristic = makeHeuristic random variables }
+                                    |> startWith clauses
+                                else
+                                    // restart knowing everything so far, keeping heuristics
+                                    { Propagation = program
+                                      Active = Set.empty
+                                      Learned = Set.empty
+                                      Heuristic = state.Heuristic }
+                                    |> startWith clauses
 
-                                    return! manage report propagation clauses
+                                return! manage report clauses
                             | _ -> ()
                         }
                     
@@ -102,66 +110,13 @@ module CycleSearch =
                     let! report = initialize()
 
                     for i in [ 1..concurrency] do
-                        start { Propagation = program
-                                Active = Set.empty
-                                Learned = Set.empty
-                                Heuristic = makeHeuristic random variables }
+                        { Propagation = program
+                          Active = Set.empty
+                          Learned = Set.empty
+                          Heuristic = makeHeuristic random variables }
+                        |> startWith Set.empty
 
-                    return! manage report program Set.empty
+                    return! manage report Set.empty
                 })
 
             processor.PostAndReply(Message.Report)
-//
-//            let start (state:State) = 
-//                // define the timeout for this item of work
-//                // update benchmark statistics
-//                incrementCycles()
-//                // start this cycle
-//                Task.Run (fun () -> startSearch random state timeout)
-//
-//            // define how to restart a state
-//            let restart (retained) (state:State) =
-//                Propagation.insertFold retained program
-//                |> Propagation.propagate
-//                |>
-//                function
-//                | Failure conflict -> Task.FromResult (Success Unsatisfiable)
-//                | Success propagation ->
-//                    incrementLearned retained.Length
-//                    let state = { state with Propagation = propagation;
-//                                             Active = [];
-//                                             Learned = retained }
-//                    start state
-//
-//            // define how to initialize with a timeout
-//            let initialize i =
-//                let state =
-//                    { Propagation = program;
-//                      Active = [];
-//                      Learned = [];
-//                      Heuristic = makeHeuristic random variables; }
-//                start state
-//
-//            // cycle through completed jobs reissuing as needed
-//            let rec cycleSearch (tasks : seq<Task<Result<Solution,Timeout>>>) = async {
-//                let completed, working = splitCompletedAndWorking tasks
-//                let successes, failures =
-//                    completed
-//                    |> List.choose (function Success x -> Some x | _ -> None),
-//                    completed
-//                    |> List.choose (function Failure x -> Some x | _ -> None)
-//                match successes with
-//                | x :: _ -> return x
-//                | [] ->
-//                    let tasks = 
-//                        failures
-//                        |> Seq.map (function {Timeout.State=state} -> restart state.Active state)
-//                        |> Seq.append working
-//                    do! Async.Sleep 1
-//                    return! cycleSearch tasks }
-//
-//            // start the initial jobs and wait until they complete
-//            seq {1.0 .. float concurrency}
-//            |> Seq.map initialize
-//            |> cycleSearch
-//            |> Async.RunSynchronously

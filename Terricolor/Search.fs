@@ -14,7 +14,7 @@ module Search =
     open Heuristics
 
     // start searching for solutions to the program and stop when timeout is exceeded
-    let startSearch (random:Random) (initial : State) timeout : Result<Solution, Timeout> =
+    let startSearch (random:Random) (timeout:TimeSpan) (initial : State)  : Result<Solution, Timeout> =
         
         // capture the high-performance timer's clock value to mark our start time
         let stopwatch = Stopwatch.StartNew()

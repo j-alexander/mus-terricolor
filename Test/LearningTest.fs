@@ -21,7 +21,7 @@ module LearningTest =
             // A Biere, M Heule, H van Maaren, T Walsh, Editors
             // J Marques-Silva , I Lynce, S Malik 
             let propagation =
-                (new Assignment(100), Queue.empty)
+                Propagation.init 100
                 |> Propagation.insert [|1; 31; -2|]      //ω1
                 |> Propagation.bindInsert [|1; -3|]      //ω2
                 |> Propagation.bindInsert [|2; 3; 4|]    //ω3
@@ -53,7 +53,7 @@ module LearningTest =
         member public x.TestUnsatisfiableProblem() =
 
             let propagation =
-                (new Assignment(3), Queue.empty)
+                Propagation.init 3
                 |> Propagation.insert [|1; 2; 3|]
                 |> Propagation.bindInsert [|-1; -2|]
                 |> Propagation.bindInsert [|-1; -2|]
@@ -82,7 +82,5 @@ module LearningTest =
 
                     match propagation with
                     | Success _ ->
-                        Assert.Fail("Should have reached a conflict.")
-                    | _ ->
-                        // conflict encountered just integrating the learned clause
-                        ()
+                        Assert.Fail("Should have encountered a conflict just integrating the learned clause")
+                    | _ -> ()

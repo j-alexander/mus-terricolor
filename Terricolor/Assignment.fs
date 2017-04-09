@@ -7,56 +7,63 @@ type Variable =
     | Value of Literal * Reason
     | WatchList of List<Clause>
 
-type Assignment (vector : Vector<Variable>, trail : Trail) =
+type Assignment =
+    { Vector : Vector<Variable>
+      Trail : Trail }
+with
+    member x.Variables = x.Vector.Length
 
-    let find (literal : Literal) =
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module Assignment =
+
+    let empty =
+        { Vector=Vector.empty
+          Trail=[] }
+
+    let init numberOfVariables = 
+        { Vector=Vector.init numberOfVariables (fun x -> WatchList []) 
+          Trail=[] }
+
+    let private find (literal:Literal) (vector:Vector<Variable>) =
         vector.[(Math.Abs literal) - 1]
-    let update (literal : Literal) (variable : Variable) =
+
+    let private update (literal:Literal) (variable:Variable) (vector:Vector<Variable>) =
         vector.Update((Math.Abs literal) - 1, variable)
 
-    new (numberOfVariables : int) =
-        Assignment(Vector.init numberOfVariables (fun x -> WatchList []), [])
-
-    member x.Trail = trail
-    member x.Variables = vector.Length
-
-    member x.Assign (literal : Literal) (reason : Reason) : Result<Assignment * List<Clause>, Conflict> =
-        match find literal with
+    let assign (literal : Literal) (reason : Reason) (assignment:Assignment) : Result<Assignment * List<Clause>, Conflict> =
+        match find literal assignment.Vector with
         | Value(assigned, _) ->
             if assigned = literal then
-                Success(x, [])
+                Success(assignment, [])
             else
-                Failure{ Conflict.Reason=reason; Trail=(literal, reason) :: trail }
+                Failure{ Conflict.Reason=reason; Trail=(literal, reason) :: assignment.Trail }
         | WatchList(watches) ->
             let value = (literal, reason)
-            let vector = update literal (Value value)
-            let trail = value :: trail
-            Success(new Assignment(vector, trail), watches)
+            let vector = update literal (Value value) assignment.Vector
+            let trail = value :: assignment.Trail
+            Success ({Assignment.Vector=vector; Trail=trail}, watches)
 
-    member x.Watch (literal : Literal) (clause : Clause) : Assignment =
-        match find literal with
+    let watch (literal:Literal) (clause:Clause) (assignment:Assignment) : Assignment =
+        match find literal assignment.Vector with
         | Value(assigned, reason) ->
             raise (Exception "Attaching clause to assigned literal.")
         | WatchList(watches) ->
             let watches = clause :: watches
-            let vector = update literal (WatchList watches)
-            new Assignment(vector, trail)
+            let vector = update literal (WatchList watches) assignment.Vector
+            { assignment with Vector=vector }
 
-    member x.IsAssigned (literal : Literal) : bool =
-        match find literal with Value(_) -> true | _ -> false
+    let isAssigned (assignment:Assignment) (literal : Literal) : bool =
+        match find literal assignment.Vector with Value(_) -> true | _ -> false
 
-    member x.IsUnassigned (literal : Literal) : bool =
-        match find literal with WatchList(_) -> true | _ -> false
+    let isUnassigned (assignment:Assignment) (literal : Literal) : bool =
+        match find literal assignment.Vector with WatchList(_) -> true | _ -> false
 
-    member x.IsTrue (literal : Literal) : bool =
-        match find literal with Value(x, _) -> x = literal | _ -> false
+    let isTrue (assignment:Assignment) (literal : Literal) : bool =
+        match find literal assignment.Vector with Value(x, _) -> x = literal | _ -> false
 
-    member x.IsFalse (literal : Literal) : bool =
-        match find literal with Value(x, _) -> x <> literal | _ -> false
+    let isFalse (assignment:Assignment) (literal : Literal) : bool =
+        match find literal assignment.Vector with Value(x, _) -> x <> literal | _ -> false
 
-    member x.TryFindUnassigned() : Option<Literal> =
-       seq { 1 .. Vector.length vector }
-       |> Seq.tryFind x.IsUnassigned
-
-    static member isTrue (assignment : Assignment) (literal : Literal) =
-        assignment.IsTrue(literal)
+    let tryFindUnassigned (assignment:Assignment) : Option<Literal> =
+       seq { 1 .. assignment.Variables }
+       |> Seq.tryFind (isUnassigned assignment)

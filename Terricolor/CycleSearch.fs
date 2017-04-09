@@ -15,14 +15,14 @@ open Terricolor.Reader
 module CycleSearch =
 
     let run (concurrency:int)
-            (variableCount:int)
+            (variables:int)
             (clauses:Clause list) =
 
         let watch = Stopwatch.StartNew()
         let random = new Random()
         
         // construct the initial logic program
-        (new Assignment(variableCount), Queue.empty)
+        Propagation.init variables
         |> Propagation.insertFold clauses
         |> Propagation.propagate
         |>
@@ -60,7 +60,7 @@ module CycleSearch =
                     { Propagation = program;
                       Active = Set.empty;
                       Learned = [];
-                      Heuristic = makeHeuristic random variableCount; }
+                      Heuristic = makeHeuristic random variables; }
                 start state
 
             // cycle through completed jobs reissuing as needed

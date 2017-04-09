@@ -3,31 +3,44 @@
 open FSharpx.Collections
 
 type Action = Insert | Update
-type Propagation = Assignment * Queue<Implication>
+
+type Propagation =
+    { Assignment:Assignment
+      Implications:Queue<Implication> }
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Propagation =
 
-    let watch (action : Action) (clause : Clause) ((assignment, implications) : Propagation) : Result<Propagation,Conflict> =
-        if Seq.exists assignment.IsTrue clause then                             // drop satisfied clauses
-            Success (assignment, implications)
+    let init variableCount =
+        { Assignment=Assignment.init variableCount
+          Implications=Queue.empty }
+
+    let watch (action : Action)
+              (clause : Clause)
+              ({ Assignment=assignment
+                 Implications=implications } as propagation) : Result<Propagation,Conflict> =
+        if Seq.exists (Assignment.isTrue assignment) clause then Success propagation // drop satisfied clauses
         else
-            let unit = Seq.tryFind assignment.IsUnassigned clause
+            let unit = Seq.tryFind (Assignment.isUnassigned assignment) clause
             match unit with
             | None ->
-                Failure { Conflict.Reason=Some clause; Trail=assignment.Trail } // 0 watchable literals -> raise a conflict
+                Failure { Conflict.Reason=Some clause; Trail=assignment.Trail }      // 0 watchable literals -> raise a conflict
             | Some(unit) ->
-                let assignment =                                                // watch the first literal (on insert)
+                let assignment =                                                     // watch the first literal (on insert)
                     match action with
-                    | Insert -> assignment.Watch unit clause
+                    | Insert -> assignment |> Assignment.watch unit clause
                     | Update -> assignment
-                let second =                                                    // check for a second literal
+                let second =                                                         // check for a second literal
                     clause
                     |> Seq.filter (fun x -> x <> unit)
-                    |> Seq.tryFind assignment.IsUnassigned
+                    |> Seq.tryFind (Assignment.isUnassigned assignment)
                 match second with
-                | None -> assignment, Queue.conj (unit, clause) implications    // == 1 watch literal -> imply the remaining literal
-                | Some(second) -> assignment.Watch second clause, implications  // >= 2 watch literals -> watch the second literal
+                | None ->                                                            // == 1 watch literal -> imply the remaining literal
+                    { Assignment=assignment
+                      Implications=Queue.conj (unit, clause) implications }
+                | Some(second) ->                                                    // >= 2 watch literals -> watch the second literal
+                    { Assignment=assignment |> Assignment.watch second clause
+                      Implications=implications }                                    
                 |> Success
 
     let insert : Clause -> Propagation -> Result<Propagation,Conflict> = watch Insert
@@ -47,18 +60,26 @@ module Propagation =
 
     let rec propagate result : Result<Propagation,Conflict> =
         result
-        |> Result.bind(fun (assignment, implications) ->
+        |> Result.bind(fun ({ Assignment=assignment
+                              Implications=implications } as propagation) ->
             match Queue.tryHead implications with
-            | None -> Success(assignment, implications)
+            | None -> Success propagation
             | Some(literal, clause) ->
-                assignment.Assign literal (Some clause)
+                assignment
+                |> Assignment.assign literal (Some clause)
                 |> Result.bind (fun (assignment, watchedClauses) ->
-                    updateFold watchedClauses (assignment, Queue.tail implications)
+                    { Assignment=assignment
+                      Implications=Queue.tail implications }
+                    |> updateFold watchedClauses
                     |> propagate))
 
     let choose (literal : Literal) : Result<Propagation,Conflict> -> Result<Propagation,Conflict> =
-        Result.bind (fst >> fun assignment ->
-            assignment.Assign literal None
+        Result.bind (fun { Assignment=assignment
+                           Implications=implications } ->
+            assignment
+            |> Assignment.assign literal None
             |> Result.bind (fun (assignment, watchedClauses) ->
-                updateFold watchedClauses (assignment,  Queue.empty)
+                { Assignment=assignment
+                  Implications=Queue.empty }
+                |> updateFold watchedClauses
                 |> propagate))

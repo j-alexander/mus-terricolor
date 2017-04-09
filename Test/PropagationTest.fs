@@ -12,22 +12,22 @@ module PropagationTest =
     type PropagationTest() =
 
         let assertUnassigned (assignment : Assignment) (literal : Literal) =
-            Assert.IsTrue(assignment.IsUnassigned literal)
-            Assert.IsFalse(assignment.IsAssigned literal)
-            Assert.IsFalse(assignment.IsTrue literal)
-            Assert.IsFalse(assignment.IsFalse literal)
+            Assert.IsTrue(Assignment.isUnassigned assignment literal)
+            Assert.IsFalse(Assignment.isAssigned assignment literal)
+            Assert.IsFalse(Assignment.isTrue assignment literal)
+            Assert.IsFalse(Assignment.isFalse assignment literal)
 
         let assertTrue (assignment : Assignment) (literal : Literal) =
-            Assert.IsTrue(assignment.IsTrue literal)
-            Assert.IsFalse(assignment.IsFalse literal)
-            Assert.IsFalse(assignment.IsUnassigned literal)
-            Assert.IsTrue(assignment.IsAssigned literal)
+            Assert.IsTrue(Assignment.isTrue assignment literal)
+            Assert.IsFalse(Assignment.isFalse assignment literal)
+            Assert.IsFalse(Assignment.isUnassigned assignment literal)
+            Assert.IsTrue(Assignment.isAssigned assignment literal)
             
         let assertFalse (assignment : Assignment) (literal : Literal) =
-            Assert.IsFalse(assignment.IsTrue literal)
-            Assert.IsTrue(assignment.IsFalse literal)
-            Assert.IsFalse(assignment.IsUnassigned literal)
-            Assert.IsTrue(assignment.IsAssigned literal)
+            Assert.IsFalse(Assignment.isTrue assignment literal)
+            Assert.IsTrue(Assignment.isFalse assignment literal)
+            Assert.IsFalse(Assignment.isUnassigned assignment literal)
+            Assert.IsTrue(Assignment.isAssigned assignment literal)
 
         let fail x = Assert.Fail(x) ; failwith x
 
@@ -42,7 +42,7 @@ module PropagationTest =
         member public x.TestEmpty() =
 
             let numberOfVariables = 3
-            let assignment = new Assignment(numberOfVariables)
+            let assignment = Assignment.init numberOfVariables
 
             Assert.AreEqual(3, assignment.Variables)
             let literals = [ -3; -2; -1; 1; 2; 3 ]
@@ -53,8 +53,8 @@ module PropagationTest =
         [<Test>]
         member public x.TestPositiveInitialUnitClause() =
             let clause = [| 1 |]
-            let (assignment, implications) =
-                (new Assignment(2), Queue.empty)
+            let { Assignment=assignment } =
+                Propagation.init 2
                 |> Propagation.insert clause
                 |> Propagation.propagate
                 |> assertPropagation
@@ -77,8 +77,8 @@ module PropagationTest =
         [<Test>]
         member public x.TestNegativeInitialUnitClause() =
             let clause = [| -2 |]
-            let (assignment, implications) =
-                (new Assignment(2), Queue.empty)
+            let { Assignment=assignment } =
+                Propagation.init 2
                 |> Propagation.insert clause
                 |> Propagation.propagate
                 |> assertPropagation
@@ -101,8 +101,8 @@ module PropagationTest =
         member public x.TestChoiceAndPropagation1() =
             let clause = [| -2; 3 |]
             let choice = -3
-            let (assignment, implications) =
-                (new Assignment(4), Queue.empty)
+            let { Assignment=assignment } =
+                Propagation.init 4
                 |> Propagation.insert clause
                 |> Propagation.choose choice
                 |> assertPropagation
@@ -132,8 +132,8 @@ module PropagationTest =
         member public x.TestChoiceAndPropagation2() =
             let clause = [| -2; 3 |]
             let choice = 2
-            let (assignment, implications) =
-                (new Assignment(4), Queue.empty)
+            let { Assignment=assignment } =
+                Propagation.init 4
                 |> Propagation.insert clause
                 |> Propagation.choose choice
                 |> assertPropagation
@@ -166,7 +166,7 @@ module PropagationTest =
             let clause3 = [| -2 |]
 
             let result = 
-                (new Assignment(2), Queue.empty)
+                Propagation.init 2
                 |> Propagation.insert clause1
                 |> Propagation.bindInsert clause2
                 |> Propagation.bindInsert clause3
@@ -195,7 +195,7 @@ module PropagationTest =
             let clause3 = [| -2; 3 |]
 
             let result = 
-                (new Assignment(3), Queue.empty)
+                Propagation.init 3
                 |> Propagation.insert clause1
                 |> Propagation.bindInsert clause2
                 |> Propagation.bindInsert clause3
@@ -227,7 +227,7 @@ module PropagationTest =
             // A Biere, M Heule, H van Maaren, T Walsh, Editors
             // J Marques-Silva , I Lynce, S Malik 
             let propagation =
-                (new Assignment(100), Queue.empty)
+                Propagation.init 100
                 |> Propagation.insert [|1; 31; -2|]      //ω1
                 |> Propagation.bindInsert [|1; -3|]      //ω2
                 |> Propagation.bindInsert [|2; 3; 4|]    //ω3

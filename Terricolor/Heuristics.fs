@@ -37,9 +37,12 @@ module Heuristics =
         threshold 0.5 random literal
 
     // select a better literal, if possible, with custom value function
-    let selectBy (fn:Literal->Literal) (state : State)  (defaultLiteral : Literal) =
-        let assignment, implications = state.Propagation
-        let occurrences = state.Heuristic.Occurrences
+    let selectBy (fn:Literal->Literal)
+                 (defaultLiteral:Literal)
+                 ({ Learned=learned
+                    Heuristic={ Occurrences=occurrences }
+                    Propagation={ Assignment=assignment
+                                  Implications=implications } } as state) =
     
         // select the highest value unassigned literal by weight
         let selectTopLiteral (clause : Clause) =
@@ -48,7 +51,7 @@ module Heuristics =
                 | None -> 0
                 | Some value -> -1 * value
             clause
-            |> Seq.filter assignment.IsUnassigned
+            |> Seq.filter (Assignment.isUnassigned assignment)
             |> Seq.sortBy weights
             |> Seq.head
 
@@ -59,12 +62,12 @@ module Heuristics =
                 // no learned clauses remain -> choose an assignment
                 [], fn defaultLiteral
             | clause :: tail ->
-                if Array.exists assignment.IsTrue clause then
+                if Array.exists (Assignment.isTrue assignment) clause then
                     selectFromLearnedClauses tail
                 else
                     learnedClauses, selectTopLiteral clause
         
-        let learnedClauses, choice = selectFromLearnedClauses state.Learned
+        let learnedClauses, choice = selectFromLearnedClauses learned
 
         { state with Learned = learnedClauses }, choice
         

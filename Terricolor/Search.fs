@@ -37,13 +37,14 @@ module Search =
                         | WatchList(_) -> true
                     // determine the continuing tree configuration
                     let decisionLevels = 
-                        let assignment, implications = current.Propagation
-                        match assignment.TryFindUnassigned() with
+                        let { Propagation={ Assignment=assignment
+                                            Implications=implications } } = current
+                        match Assignment.tryFindUnassigned assignment with
                         | None ->
                             // all variables have been assigned
                             Success(Satisfiable(assignment))
                         | Some(literal) ->
-                            let current, choice = select random current literal
+                            let current, choice = select random literal current
                             match Propagation.choose choice (Success current.Propagation) with
                             | Failure {Conflict.Reason=reason; Trail=trail} ->
                                 // analyze conflict

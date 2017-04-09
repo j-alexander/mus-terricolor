@@ -28,16 +28,16 @@ module LearningTest =
                 |> Propagation.bindInsert [|-4; -5|]     //ω4
                 |> Propagation.bindInsert [|21; -4; -6|] //ω5
                 |> Propagation.bindInsert [|5; 6|]       //ω6
-                |> Propagation.choose -21
-                |> Propagation.choose -31
+                |> Propagation.bindDecide -21
+                |> Propagation.bindDecide -31
 
             match propagation with
             | Failure conflict ->
                 Assert.Fail("Should not have reached a conflict.")
-            | propagation ->
+            | Success propagation ->
                 let propagation =
                     propagation
-                    |> Propagation.choose -1 
+                    |> Propagation.decide -1 
                     |> Propagation.propagate
                 match propagation with
                 | Success _ ->
@@ -65,9 +65,9 @@ module LearningTest =
             match propagation with
             | Failure conflict ->
                 Assert.Fail("Should not have reached a conflict.")
-            | propagation ->
+            | Success propagation ->
                 propagation
-                |> Propagation.choose 1 
+                |> Propagation.decide 1 
                 |> Propagation.propagate
                 |>
                 function
@@ -77,7 +77,7 @@ module LearningTest =
                     let learnedClause, conflictClauses = learnFromConflict(trail, reason)
                     let propagation =
                         propagation
-                        |> Propagation.bindInsert learnedClause
+                        |> Propagation.insert learnedClause
                         |> Propagation.propagate
 
                     match propagation with

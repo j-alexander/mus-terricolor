@@ -104,7 +104,7 @@ module PropagationTest =
             let { Assignment=assignment } =
                 Propagation.init 4
                 |> Propagation.insert clause
-                |> Propagation.choose choice
+                |> Propagation.bindDecide choice
                 |> assertPropagation
 
             Assert.AreEqual(4, assignment.Variables)
@@ -135,7 +135,7 @@ module PropagationTest =
             let { Assignment=assignment } =
                 Propagation.init 4
                 |> Propagation.insert clause
-                |> Propagation.choose choice
+                |> Propagation.bindDecide choice
                 |> assertPropagation
 
             Assert.AreEqual(4, assignment.Variables)
@@ -200,7 +200,7 @@ module PropagationTest =
                 |> Propagation.bindInsert clause2
                 |> Propagation.bindInsert clause3
                 |> Propagation.propagate
-                |> Propagation.choose -3
+                |> Propagation.bindDecide -3
             
             match result with
             | Success _ ->
@@ -234,12 +234,16 @@ module PropagationTest =
                 |> Propagation.bindInsert [|-4; -5|]     //ω4
                 |> Propagation.bindInsert [|21; -4; -6|] //ω5
                 |> Propagation.bindInsert [|5; 6|]       //ω6
-                |> Propagation.choose -21
-                |> Propagation.choose -31
+                |> Propagation.bindDecide -21
+                |> Propagation.bindDecide -31
             
-            let result = Propagation.choose -1 propagation
+            match propagation with
+            | Failure _ ->
+                Assert.Fail("Should not have reached a conflict")
+            | Success propagation ->
+                let result = Propagation.decide -1 propagation
 
-            match result with
-            | Success _ ->
-                Assert.Fail("Should have reached a conflict");
-            | _ -> ()
+                match result with
+                | Success _ ->
+                    Assert.Fail("Should have reached a conflict")
+                | _ -> ()

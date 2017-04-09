@@ -73,13 +73,14 @@ module Propagation =
                     |> updateFold watchedClauses
                     |> propagate))
 
-    let choose (literal : Literal) : Result<Propagation,Conflict> -> Result<Propagation,Conflict> =
-        Result.bind (fun { Assignment=assignment
-                           Implications=implications } ->
-            assignment
-            |> Assignment.assign literal None
-            |> Result.bind (fun (assignment, watchedClauses) ->
-                { Assignment=assignment
-                  Implications=Queue.empty }
-                |> updateFold watchedClauses
-                |> propagate))
+    let decide (literal : Literal) { Assignment=assignment } : Result<Propagation,Conflict> =
+        assignment
+        |> Assignment.assign literal None
+        |> Result.bind (fun (assignment, watchedClauses) ->
+            { Assignment=assignment
+              Implications=Queue.empty }
+            |> updateFold watchedClauses
+            |> propagate)
+
+    let bindDecide (literal : Literal) : Result<Propagation,Conflict> -> Result<Propagation,Conflict> =
+        Result.bind (decide literal)

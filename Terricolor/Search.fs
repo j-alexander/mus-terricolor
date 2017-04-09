@@ -44,8 +44,8 @@ module Search =
                             // all variables have been assigned
                             Success(Satisfiable(assignment))
                         | Some(literal) ->
-                            let current, choice = select random literal current
-                            match Propagation.choose choice (Success current.Propagation) with
+                            let current, decision = select random literal current
+                            match Propagation.decide decision current.Propagation with
                             | Failure {Conflict.Reason=reason; Trail=trail} ->
                                 // analyze conflict
                                 let learnedClause, conflictClauses = learnFromConflict(trail, reason)

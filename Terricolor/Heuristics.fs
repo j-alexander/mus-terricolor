@@ -56,13 +56,14 @@ module Heuristics =
             |> Seq.head
 
         // reduce the learned clause set and select a literal
-        let rec selectFromLearnedClauses (learnedClauses : List<Clause>) =
-            match learnedClauses with
-            | [] ->
+        let rec selectFromLearnedClauses (learnedClauses : Set<Clause>) =
+            if Set.isEmpty learnedClauses then
                 // no learned clauses remain -> choose an assignment
-                [], fn defaultLiteral
-            | clause :: tail ->
+                Set.empty, fn defaultLiteral
+            else
+                let clause = Set.minElement learnedClauses
                 if Array.exists (Assignment.isTrue assignment) clause then
+                    let tail = Set.remove clause learnedClauses
                     selectFromLearnedClauses tail
                 else
                     learnedClauses, selectTopLiteral clause

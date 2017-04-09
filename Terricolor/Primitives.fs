@@ -9,7 +9,7 @@ module Primitives =
     type Occurrences = Map<Literal, Weight>
     type Heuristic = { Steps : int; Occurrences : Occurrences }
 
-    type State = { Propagation : Propagation ; Learned : List<Clause>; Heuristic : Heuristic; Active : Set<Clause> }
+    type State = { Propagation : Propagation ; Learned : Clause Set; Heuristic : Heuristic; Active : Clause Set }
     
     type Solution =
         | Unsatisfiable

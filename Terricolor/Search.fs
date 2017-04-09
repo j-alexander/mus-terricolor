@@ -58,8 +58,8 @@ module Search =
                                     | Success propagation ->
                                         Some {
                                             Propagation = propagation
-                                            Active = Set.union (Set.ofList conflictClauses) state.Active
-                                            Learned = learnedClause :: state.Learned;
+                                            Active = Set.add learnedClause state.Active
+                                            Learned = Set.add learnedClause state.Learned
                                             Heuristic = bump conflictClauses state.Heuristic }
                                 // integrate this learned clause with the available decision levels
                                 List.choose integrate decisionLevels

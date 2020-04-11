@@ -62,6 +62,32 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <None Include="paket.references" />
+    <Compile Include="Literal.fs" />
+    <Compile Include="Clause.fs" />
+    <Compile Include="Reason.fs" />
+    <Compile Include="Trail.fs" />
+    <Compile Include="Conflict.fs" />
+    <Compile Include="Assignment.fs" />
+    <Compile Include="Implication.fs" />
+    <Compile Include="Propagation.fs" />
+    <Compile Include="Benchmarking.fs" />
+    <Compile Include="Primitives.fs" />
+    <Compile Include="Learning.fs" />
+    <Compile Include="Heuristics.fs" />
+    <Compile Include="Search.fs" />
+    <Compile Include="Reader.fs" />
+    <Compile Include="Concurrency.fs" />
+    <Compile Include="CycleSearch.fs" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
+  </ItemGroup>
   <Choose>
     <When Condition="$(TargetFrameworkIdentifier) == '.NETFramework' And ($(TargetFrameworkVersion) == 'v4.5' Or $(TargetFrameworkVersion) == 'v4.5.1' Or $(TargetFrameworkVersion) == 'v4.5.2' Or $(TargetFrameworkVersion) == 'v4.5.3' Or $(TargetFrameworkVersion) == 'v4.6' Or $(TargetFrameworkVersion) == 'v4.6.1' Or $(TargetFrameworkVersion) == 'v4.6.2' Or $(TargetFrameworkVersion) == 'v4.6.3' Or $(TargetFrameworkVersion) == 'v4.7' Or $(TargetFrameworkVersion) == 'v4.7.1' Or $(TargetFrameworkVersion) == 'v4.7.2' Or $(TargetFrameworkVersion) == 'v4.8')">
       <ItemGroup>
@@ -102,30 +128,4 @@
       </ItemGroup>
     </When>
   </Choose>
-  <ItemGroup>
-    <None Include="paket.references" />
-    <Compile Include="Literal.fs" />
-    <Compile Include="Clause.fs" />
-    <Compile Include="Reason.fs" />
-    <Compile Include="Trail.fs" />
-    <Compile Include="Conflict.fs" />
-    <Compile Include="Assignment.fs" />
-    <Compile Include="Implication.fs" />
-    <Compile Include="Propagation.fs" />
-    <Compile Include="Benchmarking.fs" />
-    <Compile Include="Primitives.fs" />
-    <Compile Include="Learning.fs" />
-    <Compile Include="Heuristics.fs" />
-    <Compile Include="Search.fs" />
-    <Compile Include="Reader.fs" />
-    <Compile Include="Concurrency.fs" />
-    <Compile Include="CycleSearch.fs" />
-    <Compile Include="Program.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="mscorlib" />
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-  </ItemGroup>
 </Project>

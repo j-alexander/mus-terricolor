@@ -12,8 +12,8 @@ open Terricolor.Search
 [<TestFixture>]
 type Verification() =
 
-    static let clasp = new DirectoryInfo("Benchmark/Clasp/clasp-3.2.2-win64.exe")
-    static let dimacs = new DirectoryInfo("Benchmark/Dimacs")
+    static let clasp = new DirectoryInfo("Clasp/clasp-3.2.2-win64.exe")
+    static let dimacs = new DirectoryInfo("Dimacs")
 
     let compare (input:string) =
         let startInfo = new ProcessStartInfo()

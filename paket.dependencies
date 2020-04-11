@@ -1,0 +1,12 @@
+source https://api.nuget.org/v3/index.json
+
+nuget FSharp.Core
+nuget FSharpx.Core
+nuget NUnit
+nuget NUnit.ConsoleRunner
+nuget NUnit.Extension.NUnitProjectLoader
+nuget NUnit.Extension.NUnitV2Driver
+nuget NUnit.Extension.NUnitV2ResultWriter
+nuget NUnit.Extension.TeamCityEventListener
+nuget NUnit.Extension.VSProjectLoader
+nuget NUnit.Runners

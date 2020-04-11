@@ -1,0 +1,24 @@
+NUGET
+  remote: https://api.nuget.org/v3/index.json
+    FSharp.Core (4.7.1)
+    FSharpx.Core (1.8.41)
+    Microsoft.NETCore.Platforms (3.1) - restriction: || (&& (< net45) (>= net461) (>= netstandard2.0)) (&& (>= net461) (>= netcoreapp2.0)) (&& (>= net461) (>= netstandard1.6))
+    NETStandard.Library (2.0.3) - restriction: && (>= net461) (>= netstandard1.6)
+      Microsoft.NETCore.Platforms (>= 1.1) - restriction: || (&& (>= net45) (< netstandard1.3)) (&& (< net45) (>= netstandard1.1) (< netstandard1.2) (< win8)) (&& (< net45) (>= netstandard1.2) (< netstandard1.3) (< win8) (< wpa81)) (&& (< net45) (>= netstandard1.3) (< netstandard1.4) (< win8) (< wpa81)) (&& (< net45) (>= netstandard1.4) (< netstandard1.5) (< win8) (< wpa81)) (&& (< net45) (>= netstandard1.5) (< netstandard1.6) (< win8) (< wpa81)) (&& (< net45) (>= netstandard1.6) (< netstandard2.0) (< win8) (< wpa81)) (&& (< net45) (>= netstandard2.0)) (&& (>= net46) (< netstandard1.4)) (>= net461) (>= netcoreapp2.0) (&& (>= netstandard1.0) (< portable-net45+win8+wpa81)) (&& (< netstandard1.0) (>= portable-net45+win8) (< win8)) (&& (< netstandard1.0) (< portable-net45+win8) (>= portable-net45+win8+wpa81)) (&& (< netstandard1.0) (>= portable-net45+win8+wp8+wpa81) (< portable-net45+win8+wpa81)) (&& (< netstandard1.0) (>= win8)) (&& (< netstandard1.3) (< win8) (>= wpa81)) (&& (< netstandard1.5) (>= uap10.0)) (>= uap10.1) (>= wp8)
+    NUnit (3.6.1) - restriction: >= net461
+      NETStandard.Library (>= 1.6) - restriction: >= netstandard1.6
+      System.Runtime.Loader (>= 4.0) - restriction: >= netstandard1.6
+    NUnit.ConsoleRunner (3.6.1) - restriction: >= net461
+    NUnit.Extension.NUnitProjectLoader (3.5) - restriction: >= net461
+    NUnit.Extension.NUnitV2Driver (3.6) - restriction: >= net461
+    NUnit.Extension.NUnitV2ResultWriter (3.5) - restriction: >= net461
+    NUnit.Extension.TeamCityEventListener (1.0.2) - restriction: >= net461
+    NUnit.Extension.VSProjectLoader (3.5) - restriction: >= net461
+    NUnit.Runners (3.6.1) - restriction: >= net461
+      NUnit.ConsoleRunner (>= 3.6.1)
+      NUnit.Extension.NUnitProjectLoader (>= 3.5)
+      NUnit.Extension.NUnitV2Driver (>= 3.6)
+      NUnit.Extension.NUnitV2ResultWriter (>= 3.5)
+      NUnit.Extension.TeamCityEventListener (>= 1.0.2)
+      NUnit.Extension.VSProjectLoader (>= 3.5)
+    System.Runtime.Loader (4.3) - restriction: && (>= net461) (>= netstandard1.6)

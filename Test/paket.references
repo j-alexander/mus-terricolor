@@ -1,0 +1,10 @@
+FSharpx.Core
+NUnit
+NUnit.ConsoleRunner
+NUnit.Extension.NUnitProjectLoader
+NUnit.Extension.NUnitV2Driver
+NUnit.Extension.NUnitV2ResultWriter
+NUnit.Extension.TeamCityEventListener
+NUnit.Extension.VSProjectLoader
+NUnit.Runners
+FSharp.Core

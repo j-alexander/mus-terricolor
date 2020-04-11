@@ -6,7 +6,9 @@
 *.user
 *.userosscache
 *.sln.docstates
-.vs/
+
+# JetBrains Rider IDE
+.idea/
 
 # Build results
 [Dd]ebug/
@@ -188,16 +190,13 @@ FakesAssemblies/
 .DS_Store
 ._.DS_Store
 
-temp/
+# Github Pages
+gh-pages/
 
-*.torch.json
-.fake/
+# Current Packet Version
+.paket/paket.exe
+.paket/Paket.Restore.targets
+paket-files/
+
+# Visual Studio Config Files
 .vs/
-artifacts
-fakePackages
-paket.exe
-
-node_modules
-typings
-.npm
-

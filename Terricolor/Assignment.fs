@@ -7,7 +7,7 @@ type Variable =
     | Value of Literal * Reason
     | WatchList of List<Clause>
 
-type Assignment (vector : Vector<Variable>, trail : Trail) =
+type Assignment (vector : PersistentVector<Variable>, trail : Trail) =
 
     let find (literal : Literal) =
         vector.[(Math.Abs literal) - 1]
@@ -15,7 +15,7 @@ type Assignment (vector : Vector<Variable>, trail : Trail) =
         vector.Update((Math.Abs literal) - 1, variable)
 
     new (numberOfVariables : int) =
-        Assignment(Vector.init numberOfVariables (fun x -> WatchList []), [])
+        Assignment(PersistentVector.init numberOfVariables (fun x -> WatchList []), [])
 
     member x.Trail = trail
     member x.Variables = vector.Length
@@ -53,7 +53,7 @@ type Assignment (vector : Vector<Variable>, trail : Trail) =
         match find literal with Value(x, _) -> x <> literal | _ -> false
 
     member x.TryFindUnassigned() : Option<Literal> =
-       seq { 1 .. Vector.length vector }
+       seq { 1 .. PersistentVector.length vector }
        |> Seq.tryFind x.IsUnassigned
 
     static member isTrue (assignment : Assignment) (literal : Literal) =

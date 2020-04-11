@@ -1,0 +1,8 @@
+source https://api.nuget.org/v3/index.json
+
+nuget FSharp.Core
+nuget FSharpx.Collections
+nuget Microsoft.NET.Test.Sdk
+nuget NUnit
+nuget NUnit.Console
+nuget NUnit3TestAdapter

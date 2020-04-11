@@ -31,14 +31,15 @@ module Benchmarking =
             incrementLearned count
 
     let printMemory () =
-        let current = Process.GetCurrentProcess()
-        let counter = new PerformanceCounter()
-        counter.CategoryName <- "Process"
-        counter.CounterName <- "Working Set - Private"
-        counter.InstanceName <- current.ProcessName
-        let mem = int (counter.NextValue())
-        if benchmarking then
-            printf ",%d" mem
+        //let current = Process.GetCurrentProcess()
+        //let counter = new PerformanceCounter()
+        //counter.CategoryName <- "Process"
+        //counter.CounterName <- "Working Set - Private"
+        //counter.InstanceName <- current.ProcessName
+        //let mem = int (counter.NextValue())
+        //if benchmarking then
+        //    printf ",%d" mem
+        ()
             
     let makeTimerEvent () =
         let makePrint (seconds) (name, value) =

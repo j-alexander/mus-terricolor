@@ -2,4 +2,5 @@ FSharp.Core
 FSharpx.Collections
 NUnit
 NUnit.Console
+NUnit3TestAdapter
 Microsoft.NET.Test.Sdk

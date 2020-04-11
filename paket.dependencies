@@ -5,3 +5,4 @@ nuget FSharpx.Collections
 nuget Microsoft.NET.Test.Sdk
 nuget NUnit
 nuget NUnit.Console
+nuget NUnit3TestAdapter

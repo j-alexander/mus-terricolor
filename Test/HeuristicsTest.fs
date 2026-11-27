@@ -3,6 +3,7 @@
 module HeuristicsTest =
 
     open NUnit.Framework
+    open NUnit.Framework.Legacy
     open Terricolor
     open Terricolor.Primitives
     open Terricolor.Heuristics
@@ -30,8 +31,8 @@ module HeuristicsTest =
                 { Steps = 0; Occurrences = Map.empty }
                 |> bump conflictClauses
 
-            Assert.AreEqual(1, result.Steps)
-            Assert.AreEqual(occurrences, result.Occurrences)
+            ClassicAssert.AreEqual(1, result.Steps)
+            ClassicAssert.AreEqual(occurrences, result.Occurrences)
             ()
 
         [<Test>]
@@ -44,8 +45,8 @@ module HeuristicsTest =
             let doubleOccurrences =
                 Map.map (fun x y -> 2 * y) occurrences
 
-            Assert.AreEqual(2, result.Steps)
-            Assert.AreEqual(doubleOccurrences, result.Occurrences)
+            ClassicAssert.AreEqual(2, result.Steps)
+            ClassicAssert.AreEqual(doubleOccurrences, result.Occurrences)
 
         [<Test>]
         member public x.TestReduction() =
@@ -66,6 +67,6 @@ module HeuristicsTest =
                 |> Map.add 0 2
                 |> Map.add 3 1
 
-            Assert.AreEqual(0, heuristic.Steps)
-            Assert.AreEqual(expected, heuristic.Occurrences)      
+            ClassicAssert.AreEqual(0, heuristic.Steps)
+            ClassicAssert.AreEqual(expected, heuristic.Occurrences)      
 

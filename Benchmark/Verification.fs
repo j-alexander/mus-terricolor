@@ -4,6 +4,7 @@ open System
 open System.Diagnostics
 open System.IO
 open NUnit.Framework
+open NUnit.Framework.Legacy
 open Terricolor
 open Terricolor.Primitives
 open Terricolor.Heuristics
@@ -40,7 +41,7 @@ type Verification() =
         try
             CycleSearch.run Environment.ProcessorCount variableCount clauses
             
-            Assert.Fail()
+            ClassicAssert.Fail()
         with
         | Satisfiable(solution) ->
             let decisions =
@@ -59,12 +60,12 @@ type Verification() =
                 writer.ToString()
                 |> compare
 
-            Assert.True(benchmark.Contains "s SATISFIABLE")
-            Assert.True(verification.Contains "s SATISFIABLE")
+            ClassicAssert.True(benchmark.Contains "s SATISFIABLE")
+            ClassicAssert.True(verification.Contains "s SATISFIABLE")
         | Conflict (reason, trail) ->
-            Assert.True(benchmark.Contains "s UNSATISFIABLE")
+            ClassicAssert.True(benchmark.Contains "s UNSATISFIABLE")
         | Unsatisfiable ->
-            Assert.True(benchmark.Contains "s UNSATISFIABLE")
+            ClassicAssert.True(benchmark.Contains "s UNSATISFIABLE")
 
     let verifyRutgers file = 
         verify(Path.Combine(dimacs.FullName, "Rutgers", file))

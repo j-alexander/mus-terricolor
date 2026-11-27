@@ -3,6 +3,7 @@
 module LearningTest =
 
     open NUnit.Framework
+    open NUnit.Framework.Legacy
     open Terricolor
     open Terricolor.Primitives
     open Terricolor.Propagation
@@ -35,14 +36,14 @@ module LearningTest =
                     propagation
                     |> Propagation.choose -1 
                     |> Propagation.propagate
-                Assert.Fail("Should have reached a conflict.")
+                ClassicAssert.Fail("Should have reached a conflict.")
             with
             | Conflict(reason, trail) ->
                 let learnedClause, conflictClauses = learnFromConflict(trail, reason)
                 let learnedClauseSet = Set.ofArray learnedClause
-                Assert.AreEqual(2, learnedClause.Length)
-                Assert.IsTrue(learnedClauseSet.Contains -4)      //UIP(¬x4)
-                Assert.IsTrue(learnedClauseSet.Contains 21)
+                ClassicAssert.AreEqual(2, learnedClause.Length)
+                ClassicAssert.IsTrue(learnedClauseSet.Contains -4)      //UIP(¬x4)
+                ClassicAssert.IsTrue(learnedClauseSet.Contains 21)
             ()
 
         [<Test>]
@@ -62,7 +63,7 @@ module LearningTest =
                     propagation
                     |> Propagation.choose 1 
                     |> Propagation.propagate
-                Assert.Fail("Should have reached a conflict.")
+                ClassicAssert.Fail("Should have reached a conflict.")
             with
             | Conflict(reason, trail) ->
                 let learnedClause, conflictClauses = learnFromConflict(trail, reason)
@@ -71,7 +72,7 @@ module LearningTest =
                         propagation
                         |> Propagation.insert <| learnedClause
                         |> Propagation.propagate
-                    Assert.Fail("Should have reached a conflict.")
+                    ClassicAssert.Fail("Should have reached a conflict.")
                 with
                 | Conflict(reason, trail) ->
                     // conflict encountered just integrating the learned clause

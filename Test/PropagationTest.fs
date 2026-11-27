@@ -3,6 +3,7 @@
 module PropagationTest =
 
     open NUnit.Framework
+    open NUnit.Framework.Legacy
     open Terricolor
     open Terricolor.Primitives
     open Terricolor.Propagation
@@ -12,22 +13,22 @@ module PropagationTest =
     type PropagationTest() =
 
         let assertUnassigned (assignment : Assignment) (literal : Literal) =
-            Assert.IsTrue(assignment.IsUnassigned literal)
-            Assert.IsFalse(assignment.IsAssigned literal)
-            Assert.IsFalse(assignment.IsTrue literal)
-            Assert.IsFalse(assignment.IsFalse literal)
+            ClassicAssert.IsTrue(assignment.IsUnassigned literal)
+            ClassicAssert.IsFalse(assignment.IsAssigned literal)
+            ClassicAssert.IsFalse(assignment.IsTrue literal)
+            ClassicAssert.IsFalse(assignment.IsFalse literal)
 
         let assertTrue (assignment : Assignment) (literal : Literal) =
-            Assert.IsTrue(assignment.IsTrue literal)
-            Assert.IsFalse(assignment.IsFalse literal)
-            Assert.IsFalse(assignment.IsUnassigned literal)
-            Assert.IsTrue(assignment.IsAssigned literal)
+            ClassicAssert.IsTrue(assignment.IsTrue literal)
+            ClassicAssert.IsFalse(assignment.IsFalse literal)
+            ClassicAssert.IsFalse(assignment.IsUnassigned literal)
+            ClassicAssert.IsTrue(assignment.IsAssigned literal)
             
         let assertFalse (assignment : Assignment) (literal : Literal) =
-            Assert.IsFalse(assignment.IsTrue literal)
-            Assert.IsTrue(assignment.IsFalse literal)
-            Assert.IsFalse(assignment.IsUnassigned literal)
-            Assert.IsTrue(assignment.IsAssigned literal)
+            ClassicAssert.IsFalse(assignment.IsTrue literal)
+            ClassicAssert.IsTrue(assignment.IsFalse literal)
+            ClassicAssert.IsFalse(assignment.IsUnassigned literal)
+            ClassicAssert.IsTrue(assignment.IsAssigned literal)
 
         [<Test>]
         member public x.TestEmpty() =
@@ -35,7 +36,7 @@ module PropagationTest =
             let numberOfVariables = 3
             let assignment = new Assignment(numberOfVariables)
 
-            Assert.AreEqual(3, assignment.Variables)
+            ClassicAssert.AreEqual(3, assignment.Variables)
             let literals = [ -3; -2; -1; 1; 2; 3 ]
 
             List.iter (assertUnassigned assignment) literals
@@ -48,18 +49,18 @@ module PropagationTest =
                 (new Assignment(2), Queue.empty) |> Propagation.insert <| clause
                 |> Propagation.propagate
 
-            Assert.AreEqual(2, assignment.Variables)
+            ClassicAssert.AreEqual(2, assignment.Variables)
             assertUnassigned assignment -2
             assertUnassigned assignment 2
 
             assertFalse assignment -1
             assertTrue assignment 1
 
-            Assert.AreEqual(1, assignment.Trail.Length)
+            ClassicAssert.AreEqual(1, assignment.Trail.Length)
             let (unit, reason) = assignment.Trail.Head
-            Assert.AreEqual(1, unit)
-            Assert.True(reason.IsSome)
-            Assert.AreEqual(clause, reason.Value)
+            ClassicAssert.AreEqual(1, unit)
+            ClassicAssert.True(reason.IsSome)
+            ClassicAssert.AreEqual(clause, reason.Value)
 
             ()
 
@@ -70,18 +71,18 @@ module PropagationTest =
                 (new Assignment(2), Queue.empty) |> Propagation.insert <| clause
                 |> Propagation.propagate
 
-            Assert.AreEqual(2, assignment.Variables)
+            ClassicAssert.AreEqual(2, assignment.Variables)
             assertUnassigned assignment -1
             assertUnassigned assignment 1
 
             assertFalse assignment 2
             assertTrue assignment -2
 
-            Assert.AreEqual(1, assignment.Trail.Length)
+            ClassicAssert.AreEqual(1, assignment.Trail.Length)
             let (unit, reason) = assignment.Trail.Head
-            Assert.AreEqual(-2, unit)
-            Assert.True(reason.IsSome)
-            Assert.AreEqual(clause, reason.Value)
+            ClassicAssert.AreEqual(-2, unit)
+            ClassicAssert.True(reason.IsSome)
+            ClassicAssert.AreEqual(clause, reason.Value)
 
             ()
 
@@ -93,7 +94,7 @@ module PropagationTest =
                 (new Assignment(4), Queue.empty) |> Propagation.insert <| clause
                 |> Propagation.choose choice
 
-            Assert.AreEqual(4, assignment.Variables)
+            ClassicAssert.AreEqual(4, assignment.Variables)
             assertUnassigned assignment -4
             assertUnassigned assignment -1
             assertUnassigned assignment 1
@@ -106,10 +107,10 @@ module PropagationTest =
 
             match assignment.Trail with
             | (secondLiteral, Some(secondReason)) :: (firstLiteral, None) :: [] ->
-                Assert.AreEqual(-2, secondLiteral)
-                Assert.AreEqual(clause, secondReason)
-                Assert.AreEqual(-3, firstLiteral)
-            | _ -> Assert.Fail "Incorrect Trail Configuration"
+                ClassicAssert.AreEqual(-2, secondLiteral)
+                ClassicAssert.AreEqual(clause, secondReason)
+                ClassicAssert.AreEqual(-3, firstLiteral)
+            | _ -> ClassicAssert.Fail "Incorrect Trail Configuration"
 
             ()
 
@@ -121,7 +122,7 @@ module PropagationTest =
                 (new Assignment(4), Queue.empty) |> Propagation.insert <| clause
                 |> Propagation.choose choice
 
-            Assert.AreEqual(4, assignment.Variables)
+            ClassicAssert.AreEqual(4, assignment.Variables)
             assertUnassigned assignment -4
             assertUnassigned assignment -1
             assertUnassigned assignment 1
@@ -134,10 +135,10 @@ module PropagationTest =
 
             match assignment.Trail with
             | (secondLiteral, Some(secondReason)) :: (firstLiteral, None) :: [] ->
-                Assert.AreEqual(3, secondLiteral)
-                Assert.AreEqual(clause, secondReason)
-                Assert.AreEqual(2, firstLiteral)
-            | _ -> Assert.Fail "Incorrect Trail Configuration"
+                ClassicAssert.AreEqual(3, secondLiteral)
+                ClassicAssert.AreEqual(clause, secondReason)
+                ClassicAssert.AreEqual(2, firstLiteral)
+            | _ -> ClassicAssert.Fail "Incorrect Trail Configuration"
 
             ()
 
@@ -154,18 +155,18 @@ module PropagationTest =
                     |> Propagation.insert <| clause2
                     |> Propagation.insert <| clause3
                     |> Propagation.propagate
-                Assert.Fail("Should have caused a conflict.")
+                ClassicAssert.Fail("Should have caused a conflict.")
             with
             | Conflict(assertingClause, trail) ->
                 match trail with
                 | (secondLiteral, Some(secondReason)) :: (firstLiteral, Some(firstReason)) :: [] ->
-                    Assert.AreEqual(-2, firstLiteral)
-                    Assert.AreEqual(clause3, firstReason)
-                    Assert.AreEqual(-1, secondLiteral)
-                    Assert.AreEqual(clause2, secondReason)
-                    Assert.IsTrue(assertingClause.IsSome)
-                    Assert.AreEqual(clause1, assertingClause.Value)
-                | _ -> Assert.Fail "Incorrect Trail Configuration"
+                    ClassicAssert.AreEqual(-2, firstLiteral)
+                    ClassicAssert.AreEqual(clause3, firstReason)
+                    ClassicAssert.AreEqual(-1, secondLiteral)
+                    ClassicAssert.AreEqual(clause2, secondReason)
+                    ClassicAssert.IsTrue(assertingClause.IsSome)
+                    ClassicAssert.AreEqual(clause1, assertingClause.Value)
+                | _ -> ClassicAssert.Fail "Incorrect Trail Configuration"
             ()
 
         [<Test>]
@@ -182,21 +183,21 @@ module PropagationTest =
                     |> Propagation.insert <| clause3
                     |> Propagation.propagate
                     |> Propagation.choose -3
-                Assert.Fail("Should have caused a conflict.")
+                ClassicAssert.Fail("Should have caused a conflict.")
             with
             | Conflict(assertingClause, trail) ->
                 match trail with
                 | (thirdLiteral, Some(thirdReason)) ::
                   (secondLiteral, Some(secondReason)) ::
                   (firstLiteral, None) :: [] ->
-                    Assert.AreEqual(-3, firstLiteral)
-                    Assert.AreEqual(-2, secondLiteral)
-                    Assert.AreEqual(clause3, secondReason)
-                    Assert.AreEqual(-1, thirdLiteral)
-                    Assert.AreEqual(clause2, thirdReason)
-                    Assert.IsTrue(assertingClause.IsSome)
-                    Assert.AreEqual(clause1, assertingClause.Value)
-                | _ -> Assert.Fail "Incorrect Trail Configuration"
+                    ClassicAssert.AreEqual(-3, firstLiteral)
+                    ClassicAssert.AreEqual(-2, secondLiteral)
+                    ClassicAssert.AreEqual(clause3, secondReason)
+                    ClassicAssert.AreEqual(-1, thirdLiteral)
+                    ClassicAssert.AreEqual(clause2, thirdReason)
+                    ClassicAssert.IsTrue(assertingClause.IsSome)
+                    ClassicAssert.AreEqual(clause1, assertingClause.Value)
+                | _ -> ClassicAssert.Fail "Incorrect Trail Configuration"
 
             ()
 
@@ -217,7 +218,7 @@ module PropagationTest =
                 |> Propagation.choose -31
             try
                 let result = Propagation.choose -1 propagation
-                Assert.Fail("Should have reached a conflict");
+                ClassicAssert.Fail("Should have reached a conflict");
             with
             | Conflict(assertingClause, trail) ->
                 ()
